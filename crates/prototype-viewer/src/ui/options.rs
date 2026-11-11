@@ -1369,7 +1369,7 @@ pub fn show(ctx: &egui::Context, p: &Palette, icons: &Icons, s: &mut Settings, s
     let size = default_size.min(screen.size() - vec2(40.0, 80.0)).max(min_size);
     let centered = screen.center().x - size.x / 2.0;
     let left = if st.at_login && screen.width() >= 1370.0 {
-        let beside_card = screen.left() + screen.width() * 0.373;
+        let beside_card = screen.left() + screen.width() * 0.335;
         beside_card.min(screen.right() - size.x - 14.0)
     } else {
         centered
@@ -1381,7 +1381,11 @@ pub fn show(ctx: &egui::Context, p: &Palette, icons: &Icons, s: &mut Settings, s
     let mut floater = Floater::new(
         WINDOW,
         prototype_i18n::tr!("common-preferences"),
-        pos2(left.max(screen.left() + 10.0), screen.top() + if st.at_login { 79.0 } else { 60.0 }),
+        // at login, the mockup's place: beside the card, a quarter down
+        pos2(
+            left.max(screen.left() + 10.0),
+            screen.top() + if st.at_login { (screen.height() * 0.255).min(screen.height() - size.y - 30.0).max(79.0) } else { 60.0 },
+        ),
         size,
     )
     .help(prototype_i18n::tr!("ui-options-changes-apply-immediately-and-are-saved-on-closing"))

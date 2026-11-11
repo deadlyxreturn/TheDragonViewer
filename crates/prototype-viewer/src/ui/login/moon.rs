@@ -104,12 +104,25 @@ pub(super) fn connect_button(painter: &Painter, rect: Rect, p: &Palette, active:
     }
     let face = rect.shrink2(vec2(0.0, 4.0));
     let lit = active && hot;
-    if !dragon_art::paint_fill(
+    if dragon_art::paint_fill(
         painter,
         "login-button",
         rect,
-        if pressed { Color32::from_gray(220) } else { Color32::WHITE },
+        if pressed { Color32::from_gray(220) } else if lit { Color32::WHITE } else { Color32::from_gray(238) },
     ) {
+        // the orbs in the art's two round slots (measured on the skin's
+        // 1140 × 246 face: centres at 15.1 % and 84.5 % across, 52 % down,
+        // 46 % of its height wide)
+        let y = rect.top() + rect.height() * 0.52;
+        let r = rect.height() * 0.235;
+        if lit {
+            dragon_art::glow(painter, rect.center(), rect.width() * 0.4, Color32::from_rgb(252, 109, 4), 0.5);
+        }
+        dragon_art::orb(painter, pos2(rect.left() + rect.width() * 0.151, y), r, 4);
+        dragon_art::orb(painter, pos2(rect.left() + rect.width() * 0.845, y), r, 1);
+        return;
+    }
+    {
         // a hexagonal-ended jewel: pointed ends, a bright rim
         if lit {
             dragon_art::glow(painter, face.center(), face.width() * 0.45, Color32::from_rgb(252, 109, 4), 0.6);

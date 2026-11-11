@@ -2715,7 +2715,17 @@ fn tool_button(
     } else {
         p.muted
     };
-    let (icon_rect, text) = content(ui, rect, look, label);
+    let (mut icon_rect, mut text) = content(ui, rect, look, label);
+    // Dragon Viewer's skinned buttons: the orb alone, centred, when the
+    // label does not fit (no cut-off words)
+    if skinned && let Some((_, width)) = text {
+        let family = super::fonts::display_bold(ui.ctx());
+        let need = ui.painter().layout_no_wrap(label.to_owned(), egui::FontId::new(sizing::LABEL_FONT, family), Color32::WHITE).size().x;
+        if need > width + 0.5 {
+            text = None;
+            icon_rect = Some(egui::Rect::from_center_size(rect.center(), Vec2::splat(look.icon)));
+        }
+    }
     // the gold icon, full colour (dimmed when the command cannot run)
     let gold = (!p.high_contrast).then(|| moon_tool_icon(command)).flatten().and_then(|n| icons.get(n));
     let gold_drawn = if skinned && let Some(ir) = icon_rect {
@@ -2767,7 +2777,7 @@ fn tool_button(
         if skinned {
             // white bold italic over a dark edge, as on the skin's sheet
             let family = super::fonts::display_bold(ui.ctx());
-            let font = egui::FontId::new(sizing::LABEL_FONT + 1.0, family);
+            let font = egui::FontId::new(sizing::LABEL_FONT, family);
             let ink = if ready && !locked { Color32::WHITE } else { Color32::from_white_alpha(130) };
             let at = egui::pos2(left, rect.center().y);
             for d in [Vec2::new(-1.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, -1.0), Vec2::new(0.0, 1.2)] {

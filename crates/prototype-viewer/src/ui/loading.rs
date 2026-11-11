@@ -197,6 +197,45 @@ fn progress_light(painter: &egui::Painter, p: &Palette, fill: Rect, k: f32, t: f
     super::prototype_bg::radial_glow(painter, head, 9.0 * k, p.ink, 0.95 * a);
 }
 
+/// Dragon Viewer's loading progress: seven orbs to gather across the bottom.
+/// Each one gathered (the progress past its seventh) shines in place, the
+/// next one floats down pulsing toward its spot, the others wait faint.
+/// Without a known progress they light up one after another.
+fn gather_orbs(painter: &egui::Painter, screen: Rect, y: f32, k: f32, fraction: Option<f32>, t: f32, alpha: f32) {
+    let r = 22.0 * k;
+    let gap = 26.0 * k;
+    let width = 7.0 * 2.0 * r + 6.0 * gap;
+    let left = screen.center().x - width / 2.0 + r;
+    let gathered = match fraction {
+        Some(f) => f.clamp(0.0, 1.0) * 7.0,
+        None => (t * 1.6) % 8.0,
+    };
+    for i in 0..7 {
+        let center = Pos2::new(left + i as f32 * (2.0 * r + gap), y);
+        let progress = (gathered - i as f32).clamp(0.0, 1.0);
+        let mut orb = painter.clone();
+        if progress >= 1.0 {
+            orb.multiply_opacity(alpha);
+            let breathe = 0.85 + 0.15 * (t * 2.0 + i as f32).sin();
+            super::dragon_art::glow(&orb, center, r * 1.9, Color32::from_rgb(255, 140, 0), breathe);
+            super::dragon_art::orb(&orb, center, r, i as u8 + 1);
+        } else if progress > 0.0 {
+            // the one being gathered: falls from above into place, pulsing
+            let fall = (1.0 - progress) * 120.0 * k;
+            let pulse = 0.6 + 0.4 * (t * 6.0).sin();
+            orb.multiply_opacity(alpha * (0.45 + 0.55 * progress));
+            super::dragon_art::glow(&orb, center - Vec2::new(0.0, fall), r * 2.2, Color32::from_rgb(69, 216, 255), pulse);
+            super::dragon_art::orb(&orb, center - Vec2::new(0.0, fall), r * (0.8 + 0.2 * progress), i as u8 + 1);
+            // its waiting spot
+            painter.circle_stroke(center, r, egui::Stroke::new(1.5, Color32::from_rgba_unmultiplied(255, 200, 90, (90.0 * alpha) as u8)));
+        } else {
+            orb.multiply_opacity(alpha * 0.22);
+            super::dragon_art::orb(&orb, center, r * 0.86, i as u8 + 1);
+            painter.circle_stroke(center, r, egui::Stroke::new(1.2, Color32::from_rgba_unmultiplied(255, 200, 90, (60.0 * alpha) as u8)));
+        }
+    }
+}
+
 /// What starts a fact about the place: an icon or a colored letter.
 enum Lead<'a> {
     Icon(&'a str),
@@ -306,6 +345,7 @@ fn banner(
     if fill.width() >= 1.0 {
         progress_light(&painter.with_clip_rect(screen), p, fill, k, t, a);
     }
+    gather_orbs(painter, screen, track.top() - 70.0 * k, k, fraction, t, a);
 
     // bottom right: the region on the world map, and the progress in figures
     let base = track.top() - margin * 0.8;
@@ -496,9 +536,11 @@ fn paint_starlight(painter: &egui::Painter, p: &Palette, rect: Rect, backdrop: O
     }
     let mut has_backdrop = backdrop.is_some_and(|b| b.paint(painter, p, rect, alpha));
     if !has_backdrop {
-        use super::prototype_art::{Art, paint_cover, texture};
-        if let Some(moon) = texture(painter.ctx(), Art::Moon) {
-            paint_cover(painter, &moon, rect, super::widgets::PICTURE_TINT.gamma_multiply(alpha));
+        use super::prototype_art::paint_cover;
+        // Dragon Viewer: the skin's loading picture, else its login wallpaper
+        let picture = super::dragon_art::texture(painter.ctx(), "loading").or_else(|| super::dragon_art::texture(painter.ctx(), "background"));
+        if let Some(picture) = picture {
+            paint_cover(painter, &picture, rect, super::widgets::PICTURE_TINT.gamma_multiply(alpha));
             has_backdrop = true;
         }
     }

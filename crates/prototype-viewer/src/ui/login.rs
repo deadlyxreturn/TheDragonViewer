@@ -1004,8 +1004,10 @@ pub fn show(
                                 && !settings.username.trim().is_empty()
                                 && (!form.password.is_empty() || form.stored.is_some());
                             // the mockup's LOG IN reaches past the fields on both sides
-                            let (row, _) = ui.allocate_exact_size(Vec2::new(ui.available_width(), 74.0), Sense::hover());
-                            let r = egui::Rect::from_center_size(row.center(), Vec2::new(content_width + 52.0, 66.0));
+                            // the mockup's 380 × 82 jewel (the skin art's own shape)
+                            let (row, _) = ui.allocate_exact_size(Vec2::new(ui.available_width(), 84.0), Sense::hover());
+                            let jewel_w = content_width + 52.0;
+                            let r = egui::Rect::from_center_size(row.center(), Vec2::new(jewel_w, (jewel_w / 4.63).clamp(60.0, 96.0)));
                             let resp = ui.interact(r, egui::Id::unique("dragon_log_in"), if can { Sense::click() } else { Sense::hover() });
                             // Requested UX: focus the first missing field, or Connect
                             // when credentials are ready. Firestorm giveFocus otherwise
