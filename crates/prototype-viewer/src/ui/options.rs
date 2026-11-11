@@ -862,7 +862,7 @@ pub(super) fn orb_strip(ui: &mut egui::Ui, p: &Palette, value: &mut u8, count: u
         for (i, c) in centers.iter().enumerate() {
             let on = i <= chosen;
             painter.circle_filled(*c, orb * 0.4, if on { p.violet } else { p.field });
-            painter.circle_stroke(*c, orb * 0.4, Stroke::new(if i == chosen { 3.0 } else { 1.0 }, p.ink));
+            painter.circle_stroke(*c, orb * 0.4, egui::Stroke::new(if i == chosen { 3.0 } else { 1.0 }, p.ink));
         }
     } else {
         // the rail between the first and the last orb, lit up to the choice
@@ -883,7 +883,7 @@ pub(super) fn orb_strip(ui: &mut egui::Ui, p: &Palette, value: &mut u8, count: u
             let radius = if i == chosen { orb * 0.56 } else { orb * 0.5 };
             if i == chosen {
                 super::dragon_art::glow(&painter, *c, orb * 0.95, egui::Color32::from_rgb(69, 216, 255), 1.0);
-                painter.circle_stroke(*c, radius + 2.0, Stroke::new(2.0, egui::Color32::from_rgb(255, 247, 161)));
+                painter.circle_stroke(*c, radius + 2.0, egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 247, 161)));
             } else if hot == Some(i) {
                 super::dragon_art::glow(&painter, *c, orb * 0.75, egui::Color32::from_rgb(255, 139, 32), 0.8);
             }
@@ -900,7 +900,7 @@ pub(super) fn orb_strip(ui: &mut egui::Ui, p: &Palette, value: &mut u8, count: u
         }
     }
     if resp.has_focus() {
-        painter.rect_stroke(rect, 6.0, Stroke::new(1.0, p.ink.gamma_multiply(0.5)), egui::StrokeKind::Inside);
+        painter.rect_stroke(rect, 6.0, egui::Stroke::new(1.0, p.ink.gamma_multiply(0.5)), egui::StrokeKind::Inside);
     }
     if *value != old {
         resp.mark_changed();

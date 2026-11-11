@@ -137,14 +137,14 @@ fn slots() -> &'static Mutex<HashMap<String, Slot>> {
 /// The texture of the picture `name`, once decoded; None while it decodes
 /// or when the skin has none.
 pub fn texture(ctx: &Context, name: &str) -> Option<TextureHandle> {
-    let id = egui::Id::new(("dragon_skin_art", name));
+    let id = egui::Id::unique(("dragon_skin_art", name));
     if let Some(t) = ctx.data(|d| d.get_temp::<TextureHandle>(id)) {
         return Some(t);
     }
-    let mut slots = slots().lock().ok()?;
-    match slots.get(name) {
+    let mut table = slots().lock().ok()?;
+    match table.get(name) {
         None => {
-            slots.insert(name.to_owned(), Slot::Loading);
+            table.insert(name.to_owned(), Slot::Loading);
             let (ctx, name) = (ctx.clone(), name.to_owned());
             std::thread::spawn(move || {
                 let image = find(&name).and_then(|(bytes, svg)| {
