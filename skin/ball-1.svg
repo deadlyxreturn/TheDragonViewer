@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <radialGradient id="glass" cx="35%" cy="27%" r="77%">
+      <stop stop-color="#fffcb2"/><stop offset=".30" stop-color="#ffe144"/>
+      <stop offset=".66" stop-color="#ffab09"/><stop offset=".89" stop-color="#ee5703"/>
+      <stop offset=".96" stop-color="#ff9b03"/><stop offset="1" stop-color="#ffed51"/>
+    </radialGradient>
+    <linearGradient id="rim" x2=".6" y2="1">
+      <stop stop-color="#fffada"/><stop offset=".27" stop-color="#fff476"/>
+      <stop offset=".50" stop-color="#f68d0a"/><stop offset=".75" stop-color="#b74103"/>
+      <stop offset="1" stop-color="#ffdc38"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset=".70" stop-color="#ff4a00" stop-opacity=".80"/>
+      <stop offset="1" stop-color="#ff6900" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="red" x2="0" y2="1"><stop stop-color="#e93806"/><stop offset="1" stop-color="#ac0c00"/></linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="48" fill="url(#glow)"/>
+  <circle cx="48" cy="48" r="41" fill="#8e1c00" stroke="#ff9b22" stroke-width="2"/>
+  <circle cx="48" cy="48" r="37.5" fill="url(#glass)" stroke="url(#rim)" stroke-width="3.3"/>
+  <path d="M17 56C11 31 29 13 53 14M36 82c19 6 38-4 44-23" fill="none" stroke="#fff4a2" stroke-width="2" opacity=".74" stroke-linecap="round"/>
+  <g fill="url(#red)" stroke="#f66b08" stroke-width=".7" stroke-linejoin="round"><polygon class="star" points="48.00,40.50 50.15,46.04 56.08,46.37 51.48,50.13 53.00,55.88 48.00,52.66 43.00,55.88 44.52,50.13 39.92,46.37 45.85,46.04"/></g>
+  <ellipse cx="32" cy="25" rx="10.8" ry="5.7" fill="#fffef0" transform="rotate(-40 32 25)"/>
+  <ellipse cx="23" cy="36" rx="3.1" ry="4.8" fill="#fff6c0" transform="rotate(31 23 36)"/>
+  <path d="M60 77q11-5 15-13" stroke="#fffad0" stroke-width="2.1" fill="none" stroke-linecap="round"/>
+</svg>
