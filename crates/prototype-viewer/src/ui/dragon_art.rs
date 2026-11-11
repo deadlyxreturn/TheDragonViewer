@@ -209,7 +209,9 @@ pub fn paint_fill(painter: &Painter, name: &str, rect: Rect, tint: Color32) -> b
 /// else a plain gold orb.
 pub fn orb(painter: &Painter, center: Pos2, radius: f32, index: u8) {
     let rect = Rect::from_center_size(center, Vec2::splat(radius * 2.0));
-    if paint(painter, &format!("balls/ball-{}", index.clamp(1, 7)), rect, Color32::WHITE) {
+    // the skin's own orbs, at its top level or in `balls/`
+    let index = index.clamp(1, 7);
+    if paint(painter, &format!("ball-{index}"), rect, Color32::WHITE) || paint(painter, &format!("balls/ball-{index}"), rect, Color32::WHITE) {
         return;
     }
     // drawn orb: deep orange rim to a pale gold core, a white highlight
