@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 476" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="gold" x2=".8" y2="1">
+      <stop stop-color="#fffdd4"/><stop offset=".18" stop-color="#ffb437"/>
+      <stop offset=".35" stop-color="#fffaac"/><stop offset=".51" stop-color="#ff980b"/>
+      <stop offset=".67" stop-color="#ffca25"/><stop offset=".83" stop-color="#fff7c6"/>
+      <stop offset="1" stop-color="#ffab0c"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#fff6b5"/><stop offset=".22" stop-color="#e46b06"/>
+      <stop offset=".5" stop-color="#ffdb60"/><stop offset=".7" stop-color="#a33202"/>
+      <stop offset="1" stop-color="#fff9c8"/>
+    </linearGradient>
+    <radialGradient id="light">
+      <stop stop-color="#fff"/><stop offset=".1" stop-color="#fffbc2" stop-opacity=".98"/>
+      <stop offset=".32" stop-color="#ffd146" stop-opacity=".65"/>
+      <stop offset=".68" stop-color="#ff6a06" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#ff3d05" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ray">
+      <stop stop-color="#ffb614" stop-opacity="0"/><stop offset=".41" stop-color="#ffe874" stop-opacity=".58"/>
+      <stop offset=".5" stop-color="#fff"/><stop offset=".59" stop-color="#ffe874" stop-opacity=".58"/>
+      <stop offset="1" stop-color="#ffb614" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="bloom" x="-.08" y="-.08" width="1.16" height="1.16"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="halo" x="-.06" y="-.06" width="1.12" height="1.12"><feGaussianBlur stdDeviation="2.6"/></filter>
+    <g id="glint">
+      <ellipse rx="43" ry="22" fill="url(#light)"/>
+      <rect x="-36" y="-.85" width="72" height="1.7" fill="url(#ray)"/>
+      <rect x="-12" y="-.63" width="24" height="1.26" transform="rotate(90)" fill="url(#ray)"/>
+    </g>
+  </defs>
+  <g fill="none">
+    <rect x="23" y="23" width="434" height="430" rx="40" stroke="#ff5704" stroke-width="11" filter="url(#bloom)" opacity=".88"/>
+    <rect x="24" y="24" width="432" height="428" rx="39" stroke="#ffb51c" stroke-width="6" filter="url(#halo)"/>
+    <rect x="24" y="24" width="432" height="428" rx="39" stroke="url(#edge)" stroke-width="4.6"/>
+    <rect x="24" y="24" width="432" height="428" rx="39" stroke="url(#gold)" stroke-width="2"/>
+    <rect x="29" y="29" width="422" height="418" rx="35" stroke="#8c2803" stroke-width="1.8"/>
+    <rect x="31" y="31" width="418" height="414" rx="33" stroke="url(#gold)" stroke-width="1.5"/>
+    <rect x="34" y="34" width="412" height="408" rx="31" stroke="#fff1ac" stroke-opacity=".36"/>
+  </g>
+  <use href="#glint" transform="translate(73 25) scale(.89 .82)"/>
+  <use href="#glint" transform="translate(388 25) scale(1.25 1)"/>
+  <use href="#glint" transform="translate(455 70) rotate(85) scale(.78 .7)"/>
+  <use href="#glint" transform="translate(24 176) rotate(90) scale(.68 .65)"/>
+  <use href="#glint" transform="translate(456 392) rotate(90) scale(.93 .85)"/>
+  <use href="#glint" transform="translate(242 451) scale(1.6 1)"/>
+  <use href="#glint" transform="translate(121 451) scale(.73 .77)"/>
+</svg>
