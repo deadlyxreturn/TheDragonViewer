@@ -73,7 +73,11 @@ fn menu_bar(ctx: &Context, p: &Palette, form: &mut LoginForm) -> LoginAction {
                             ui.add_space(8.0);
                         }
                         ui.separator();
-                        // The mockup's menus: what works before login
+                        // The mockup's menus (bold italic, wide): what works before login
+                        ui.style_mut()
+                            .text_styles
+                            .insert(egui::TextStyle::Button, egui::FontId::new(17.0, super::super::fonts::display_bold(ui.ctx())));
+                        ui.spacing_mut().button_padding = vec2(16.0, 4.0);
                         ui.menu_button(prototype_i18n::tr!("dragon-menu-file"), |ui| {
                             menu_action(ui, prototype_i18n::tr!("common-preferences"), &mut action, LoginAction::Preferences);
                             menu_action(ui, prototype_i18n::tr!("moon-login-advanced"), &mut action, LoginAction::Advanced);
