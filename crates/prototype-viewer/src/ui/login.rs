@@ -1046,27 +1046,22 @@ pub fn show(
                                 action = LoginAction::Login;
                             }
                             ui.add_space(2.0);
-                            ui.horizontal(|ui| {
+                            {
                                 let a = text_link_size(ui, p, prototype_i18n::tr!("dragon-login-create-account"), REGISTER_URL, false);
                                 let b = text_link_size(ui, p, prototype_i18n::tr!("ui-login-forgot-password"), FORGOT_PASSWORD_URL, false);
+                                let (row, _) = ui.allocate_exact_size(Vec2::new(content_width, 22.0), Sense::hover());
                                 let total = a + b + 34.0;
-                                let x = ui.min_rect().left() + (content_width - total).max(0.0) * 0.5;
-                                let y = ui.cursor().top();
-                                let first = egui::Rect::from_min_size(egui::pos2(x, y), Vec2::new(a, 20.0));
-                                let second = egui::Rect::from_min_size(egui::pos2(x + a + 34.0, y), Vec2::new(b, 20.0));
-                                ui.scope_builder(egui::UiBuilder::new().max_rect(first), |ui| {
-                                    text_link(ui, p, prototype_i18n::tr!("dragon-login-create-account"), REGISTER_URL);
-                                });
+                                let x = row.left() + (content_width - total).max(0.0) * 0.5;
+                                let first = egui::Rect::from_min_size(egui::pos2(x, row.top()), Vec2::new(a + 2.0, 22.0));
+                                let second = egui::Rect::from_min_size(egui::pos2(x + a + 34.0, row.top()), Vec2::new(b + 2.0, 22.0));
+                                text_link(&mut ui.new_child(egui::UiBuilder::new().max_rect(first)), p, prototype_i18n::tr!("dragon-login-create-account"), REGISTER_URL);
                                 ui.painter().vline(
                                     x + a + 17.0,
-                                    egui::Rangef::new(y + 2.0, y + 18.0),
+                                    egui::Rangef::new(row.top() + 3.0, row.bottom() - 3.0),
                                     Stroke::new(1.0, p.ink.gamma_multiply(0.65)),
                                 );
-                                ui.scope_builder(egui::UiBuilder::new().max_rect(second), |ui| {
-                                    text_link(ui, p, prototype_i18n::tr!("ui-login-forgot-password"), FORGOT_PASSWORD_URL);
-                                });
-                                ui.allocate_exact_size(Vec2::new(content_width, 20.0), Sense::hover());
-                            });
+                                text_link(&mut ui.new_child(egui::UiBuilder::new().max_rect(second)), p, prototype_i18n::tr!("ui-login-forgot-password"), FORGOT_PASSWORD_URL);
+                            }
                         });
                         if let Some(reason) = form.block_reason {
                             ui.add_space(8.0);
