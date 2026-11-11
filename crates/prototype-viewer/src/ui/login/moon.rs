@@ -73,7 +73,18 @@ pub(super) fn gold_field(ctx: &egui::Context, rect: Rect, edge: Color32, hot: bo
 pub(super) fn card_face(ctx: &egui::Context, rect: Rect) -> Shape {
     let radius = 39.0;
     if let Some(t) = dragon_art::texture(ctx, "login-frame") {
-        return Shape::image(t.id(), rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+        // the dark glass under the frame keeps the fields readable over
+        // any wallpaper
+        return Shape::Vec(vec![
+            gradient_rect_shape(
+                ctx,
+                rect.shrink(6.0),
+                radius - 6.0,
+                Color32::from_rgba_unmultiplied(30, 24, 56, 215),
+                Color32::from_rgba_unmultiplied(10, 8, 26, 232),
+            ),
+            Shape::image(t.id(), rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE),
+        ]);
     }
     let mut v = vec![
         // the warm outer glow

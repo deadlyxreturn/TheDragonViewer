@@ -569,7 +569,8 @@ impl<'a> Floater<'a> {
         }
         let mut glass = *p;
         if (self.chat || self.id == super::options::WINDOW) && glass.panel_alpha < 255 {
-            glass.panel_alpha = glass.panel_alpha.saturating_sub(68);
+            // Dragon Viewer: the chat and Preferences keep a dense glass, the text clear
+            glass.panel_alpha = glass.panel_alpha.saturating_sub(8);
         }
         let frame = egui::Frame::new()
             .fill(Color32::from_rgba_unmultiplied(
