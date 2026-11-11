@@ -344,3 +344,69 @@ pub fn gold_rim(painter: &Painter, rect: Rect, radius: f32) {
         StrokeKind::Inside,
     );
 }
+
+/// The bytes of the skin file at `path` (with its extension), from the
+/// same places as the pictures.
+pub fn file_bytes(path: &str) -> Option<Vec<u8>> {
+    for dir in runtime_dirs() {
+        if let Ok(bytes) = std::fs::read(dir.join(path)) {
+            return Some(bytes);
+        }
+    }
+    embedded::SKIN_FILES.iter().find(|(n, _)| *n == path).map(|(_, b)| b.to_vec())
+}
+
+#[derive(serde::Deserialize, Default)]
+#[serde(default)]
+struct ToolbarLayout {
+    face_cap_px: f32,
+    orbs: HashMap<String, u8>,
+}
+
+fn toolbar_layout() -> &'static ToolbarLayout {
+    static LAYOUT: OnceLock<ToolbarLayout> = OnceLock::new();
+    LAYOUT.get_or_init(|| {
+        file_bytes("toolbar/layout.json")
+            .and_then(|b| serde_json::from_slice(&b).map_err(|e| log::warn!("skin toolbar/layout.json: {e}")).ok())
+            .unwrap_or_default()
+    })
+}
+
+/// The orb (1 to 7) of a toolbar command, from `toolbar/layout.json`.
+pub fn toolbar_orb(command: &str) -> u8 {
+    toolbar_layout().orbs.get(command).copied().unwrap_or(4).clamp(1, 7)
+}
+
+/// The skin's toolbar button face (`toolbar/face`, `toolbar/face-active`)
+/// drawn over `rect` in three slices, its rounded ends unstretched. False
+/// when the skin has no face.
+pub fn toolbar_face(painter: &Painter, rect: Rect, active: bool, hot: bool) -> bool {
+    let name = if active { "toolbar/face-active" } else { "toolbar/face" };
+    let Some(t) = texture(painter.ctx(), name).or_else(|| texture(painter.ctx(), "toolbar/face")) else {
+        return false;
+    };
+    let [w, h] = t.size();
+    let (w, h) = (w as f32, h as f32);
+    let cap_px = if toolbar_layout().face_cap_px > 0.0 { toolbar_layout().face_cap_px } else { h * 0.47 };
+    let scale = rect.height() / h;
+    let cap = (cap_px * scale).min(rect.width() * 0.5);
+    let u = cap_px / w;
+    let tint = if hot && !active { Color32::from_gray(255) } else if active { Color32::WHITE } else { Color32::from_gray(235) };
+    let pieces = [
+        (Rect::from_min_max(rect.min, pos2(rect.left() + cap, rect.bottom())), Rect::from_min_max(pos2(0.0, 0.0), pos2(u, 1.0))),
+        (
+            Rect::from_min_max(pos2(rect.left() + cap, rect.top()), pos2(rect.right() - cap, rect.bottom())),
+            Rect::from_min_max(pos2(u, 0.0), pos2(1.0 - u, 1.0)),
+        ),
+        (Rect::from_min_max(pos2(rect.right() - cap, rect.top()), rect.max), Rect::from_min_max(pos2(1.0 - u, 0.0), pos2(1.0, 1.0))),
+    ];
+    for (r, uv) in pieces {
+        if r.width() > 0.0 {
+            painter.image(t.id(), r, uv, tint);
+        }
+    }
+    if hot {
+        painter.rect_filled(rect.shrink2(vec2(cap * 0.5, rect.height() * 0.2)), rect.height() * 0.3, Color32::from_white_alpha(14));
+    }
+    true
+}

@@ -2678,7 +2678,10 @@ fn tool_button(
     // `locked`: RLVa would refuse its action, greyed without a hover face
     let hovered = ready && !locked && resp.hovered();
     let moon = !p.high_contrast && !look.editing;
-    if moon {
+    // Dragon Viewer: the skin's toolbar face with an orb and the label
+    let skinned = moon && super::dragon_art::toolbar_face(painter, rect.shrink2(Vec2::new(1.0, 1.0)), ready && active, hovered);
+    if skinned {
+    } else if moon {
         // Dragon Viewer: every button a slim glossy glass pill with a gold
         // rim, the active one pink (the concept's bottom bar)
         let face = rect.shrink2(Vec2::new(1.0, 2.0));
@@ -2715,7 +2718,15 @@ fn tool_button(
     let (icon_rect, text) = content(ui, rect, look, label);
     // the gold icon, full colour (dimmed when the command cannot run)
     let gold = (!p.high_contrast).then(|| moon_tool_icon(command)).flatten().and_then(|n| icons.get(n));
-    let gold_drawn = if let Some(ir) = icon_rect
+    let gold_drawn = if skinned && let Some(ir) = icon_rect {
+        let mut orb_painter = painter.clone();
+        if !ready || locked {
+            orb_painter.multiply_opacity(0.45);
+        }
+        let r = ir.height().max(ir.width()) * 0.62;
+        super::dragon_art::orb(&orb_painter, ir.center(), r, super::dragon_art::toolbar_orb(command));
+        true
+    } else if let Some(ir) = icon_rect
         && let Some(t) = gold
     {
         let shade = if !ready || locked { Color32::from_white_alpha(110) } else { Color32::WHITE };
@@ -2753,14 +2764,26 @@ fn tool_button(
         super::widgets::paint_ink_centered(painter, galley, ir.center(), tint);
     }
     if let Some((left, width)) = text {
-        super::widgets::paint_elided(
-            ui,
-            label,
-            egui::pos2(left, rect.center().y),
-            width,
-            egui::FontId::proportional(sizing::LABEL_FONT),
-            tint,
-        );
+        if skinned {
+            // white bold italic over a dark edge, as on the skin's sheet
+            let family = super::fonts::display_bold(ui.ctx());
+            let font = egui::FontId::new(sizing::LABEL_FONT + 1.0, family);
+            let ink = if ready && !locked { Color32::WHITE } else { Color32::from_white_alpha(130) };
+            let at = egui::pos2(left, rect.center().y);
+            for d in [Vec2::new(-1.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, -1.0), Vec2::new(0.0, 1.2)] {
+                super::widgets::paint_elided(ui, label, at + d, width, font.clone(), Color32::from_rgb(60, 22, 4));
+            }
+            super::widgets::paint_elided(ui, label, at, width, font, ink);
+        } else {
+            super::widgets::paint_elided(
+                ui,
+                label,
+                egui::pos2(left, rect.center().y),
+                width,
+                egui::FontId::proportional(sizing::LABEL_FONT),
+                tint,
+            );
+        }
     }
     if unread > 0 && look.dock {
         // the one counter of the islands, as on the bell: 3 px in from the

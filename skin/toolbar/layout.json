@@ -1,0 +1,21 @@
+{
+  "face_cap_px": 56,
+  "orbs": {
+    "conversations": 4,
+    "speak": 1,
+    "people": 2,
+    "inventory": 3,
+    "appearance": 4,
+    "move": 5,
+    "view": 6,
+    "worldmap": 7,
+    "minimap": 1,
+    "search": 2,
+    "places": 3,
+    "snapshot": 4,
+    "record": 5,
+    "gestures": 6,
+    "ao": 7,
+    "preferences": 4
+  }
+}
