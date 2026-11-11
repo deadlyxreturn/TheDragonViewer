@@ -149,7 +149,7 @@ mod wearable_editor;
 mod world_click_demo;
 mod worn_demo;
 
-/// A window command from Moon Viewer's own caption buttons and title bar.
+/// A window command from Dragon Viewer's own caption buttons and title bar.
 /// The actions are handled while the frame holds the window outside
 /// `self.gfx`, so they are queued and carried out right after, with it.
 #[derive(Debug, Clone, Copy)]
@@ -338,7 +338,7 @@ const PAUSED_RESOLUTION_DIVISOR: u32 = 16;
 /// The wolf logo (window icon, login and loading screens, About, system
 /// notifications), read from the branding folder: one file for the viewer,
 /// the README and the exe icon.
-pub(crate) const LOGO_PNG: &[u8] = include_bytes!("../../../assets/branding/moon-viewer-icon.png");
+pub(crate) const LOGO_PNG: &[u8] = include_bytes!("../../../assets/branding/dragon-viewer-icon.png");
 
 struct LogoData {
     ui: egui::ColorImage,
@@ -11203,10 +11203,10 @@ impl App {
         let mut library_drop = None;
         let t_pass = Instant::now();
         let mut windows_ms = 0.0;
-        // Moon Viewer's own glossy minimize, maximize and close buttons are
+        // Dragon Viewer's own glossy minimize, maximize and close buttons are
         // the window's on the login screen and in-world (classic bars): no
         // Windows title bar there, so they are never doubled. It comes back
-        // where Moon Viewer draws none (loading, the island bars).
+        // where Dragon Viewer draws none (loading, the island bars).
         {
             let ours = match self.screen {
                 Screen::Login => true,
@@ -11522,7 +11522,7 @@ impl App {
             self.net.set_bandwidth(bandwidth_kbps(&self.settings));
         }
         self.handle_actions(actions, event_loop);
-        // Moon Viewer's caption buttons and title bar, with the window at hand
+        // Dragon Viewer's caption buttons and title bar, with the window at hand
         let cmd_id = egui::Id::new(WINDOW_CMD);
         if let Some(cmd) = ctx.data_mut(|d| {
             let cmd = d.get_temp::<WindowCmd>(cmd_id);

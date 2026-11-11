@@ -3,8 +3,8 @@
 //! the system credential store (Windows Credential Manager, protected by the
 //! user's session) instead of Firestorm's bin_conf.dat file.
 
-const SERVICE: &str = "Moon Viewer";
-const MFA_SERVICE: &str = "Moon Viewer MFA";
+const SERVICE: &str = "Dragon Viewer";
+const MFA_SERVICE: &str = "Dragon Viewer MFA";
 const MFA_LIFETIME: u64 = 30 * 24 * 60 * 60;
 
 /// Firestorm LLLoginInstance::saveMFAHash: separate protected map per user/grid.

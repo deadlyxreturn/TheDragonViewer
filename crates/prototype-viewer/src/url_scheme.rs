@@ -165,7 +165,7 @@ mod win {
         write(&class, None, "URL:Virtual World")?;
         write(&class, Some("URL Protocol"), "")?;
         write(&format!(r"{class}\DefaultIcon"), None, &format!("\"{exe}\",0"))?;
-        write(&format!(r"{class}\shell\open"), Some("FriendlyAppName"), "Moon Viewer")?;
+        write(&format!(r"{class}\shell\open"), Some("FriendlyAppName"), "Dragon Viewer")?;
         write(&format!(r"{class}\shell\open\command"), None, &format!("\"{exe}\" -url \"%1\""))?;
         log::info!("{scheme} links: registered for this user");
         Ok(())
@@ -223,7 +223,7 @@ mod win {
             let Some(exe) = read(HKEY_CURRENT_USER, &format!(r"{class}\shell\open\command"), None).and_then(|c| command_exe(&c)) else {
                 continue;
             };
-            let prototype = exe.file_name().is_some_and(|n| n.eq_ignore_ascii_case("moon-viewer.exe"));
+            let prototype = exe.file_name().is_some_and(|n| n.eq_ignore_ascii_case("dragon-viewer.exe"));
             if prototype && !exe.exists() {
                 log::info!("{scheme} links: the registered viewer moved");
                 if let Err(e) = register_scheme(scheme) {
@@ -729,8 +729,8 @@ mod tests {
     #[test]
     fn command_program() {
         assert_eq!(
-            super::win::command_exe(r#""C:\Viewers\Prototype\moon-viewer.exe" -url "%1""#),
-            Some(std::path::PathBuf::from(r"C:\Viewers\Prototype\moon-viewer.exe"))
+            super::win::command_exe(r#""C:\Viewers\Prototype\dragon-viewer.exe" -url "%1""#),
+            Some(std::path::PathBuf::from(r"C:\Viewers\Prototype\dragon-viewer.exe"))
         );
         assert_eq!(
             super::win::command_exe(r#"C:\Viewer\viewer.exe -url "%1""#),

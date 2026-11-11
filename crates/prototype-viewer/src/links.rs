@@ -3,26 +3,26 @@
 //! the same Discord and website links: change them there too.
 
 /// Source code repository (GitHub page).
-pub const GITHUB: &str = "https://github.com/deadlyxreturn/MoonViewer";
+pub const GITHUB: &str = "https://github.com/deadlyxreturn/TheDragonViewer";
 /// Issue template chooser, opened in the browser by "Report a bug" (login
 /// screen, top bar, Help menu) and by the crash window.
-pub const NEW_ISSUE: &str = "https://github.com/deadlyxreturn/MoonViewer/issues/new/choose";
+pub const NEW_ISSUE: &str = "https://github.com/deadlyxreturn/TheDragonViewer/issues/new/choose";
 /// The project's wiki, generated from the guides of `docs/`
 /// (`scripts/build-wiki.ps1`): Help › Prototype wiki.
-pub const WIKI: &str = "https://github.com/deadlyxreturn/MoonViewer/wiki";
+pub const WIKI: &str = "https://github.com/deadlyxreturn/TheDragonViewer/wiki";
 /// Community Discord invite.
 /// Prototype's website: news, downloads and support.
-pub const PROTOTYPE_SITE: &str = "https://github.com/deadlyxreturn/MoonViewer";
+pub const PROTOTYPE_SITE: &str = "https://github.com/deadlyxreturn/TheDragonViewer";
 pub const DISCORD: &str = "";
 /// Project website.
-pub const WEBSITE: &str = "https://github.com/deadlyxreturn/MoonViewer";
+pub const WEBSITE: &str = "https://github.com/deadlyxreturn/TheDragonViewer";
 /// The privacy policy on the website (Preferences › Privacy › Your data).
-pub const PRIVACY_POLICY: &str = "https://github.com/deadlyxreturn/MoonViewer/blob/main/PRIVACY.md";
+pub const PRIVACY_POLICY: &str = "https://github.com/deadlyxreturn/TheDragonViewer/blob/main/PRIVACY.md";
 /// News feed: this folder of `main`, hand-edited Markdown files, one
 /// `<language>.md` per UI language (`news/` at the repository root). The
 /// viewer keeps what it read in its cache as a JSON array of
 /// `{"date", "title", "summary", "url"}`.
-pub const NEWS_FEED: &str = "https://raw.githubusercontent.com/deadlyxreturn/MoonViewer/main/news/";
+pub const NEWS_FEED: &str = "https://raw.githubusercontent.com/deadlyxreturn/TheDragonViewer/main/news/";
 /// Files of the source repository as GitHub serves them unrendered; a branch
 /// name and a path follow.
-pub const RAW_FILES: &str = "https://raw.githubusercontent.com/deadlyxreturn/MoonViewer/";
+pub const RAW_FILES: &str = "https://raw.githubusercontent.com/deadlyxreturn/TheDragonViewer/";

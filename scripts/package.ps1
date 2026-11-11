@@ -2,7 +2,7 @@
 .SYNOPSIS
     Stages the compiled viewer, license notices and install manifest.
 .EXAMPLE
-    ./scripts/package.ps1 -Exe target/release/moon-viewer.exe -Out Moon-Viewer-v0.1.0-windows-x64
+    ./scripts/package.ps1 -Exe target/release/dragon-viewer.exe -Out Dragon-Viewer-v0.1.0-windows-x64
 #>
 param(
     [Parameter(Mandatory)][string]$Exe,
@@ -12,12 +12,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $exePath = (Resolve-Path -LiteralPath $Exe).Path
 $reported = (& $exePath --version | Out-String).Trim()
-if ($LASTEXITCODE -ne 0 -or $reported -cnotmatch '^Moon Viewer (\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$') {
+if ($LASTEXITCODE -ne 0 -or $reported -cnotmatch '^Dragon Viewer (\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$') {
     throw "Invalid package version: '$reported'."
 }
 $version = $Matches[1]
 $windowsPackage = [IO.Path]::GetExtension($exePath) -ieq '.exe'
-$exeName = if ($windowsPackage) { 'moon-viewer.exe' } else { Split-Path $exePath -Leaf }
+$exeName = if ($windowsPackage) { 'dragon-viewer.exe' } else { Split-Path $exePath -Leaf }
 
 $viewerAssets = Join-Path $Source 'crates/prototype-viewer/assets'
 $notices = @{
@@ -28,7 +28,7 @@ $notices = @{
     lsl = (Join-Path $viewerAssets 'lsl/PREPROCESSOR-LICENSE.txt')
     stars = (Join-Path $Source 'assets/stars/LICENSE-TYCHO2.md')
 }
-if ($windowsPackage) { $notices.branding = Join-Path $Source 'assets/branding/moon-viewer.ico' }
+if ($windowsPackage) { $notices.branding = Join-Path $Source 'assets/branding/dragon-viewer.ico' }
 foreach ($group in $notices.Keys) {
     $directory = Join-Path $Out "assets/$group"
     New-Item -ItemType Directory -Force -Path $directory | Out-Null
@@ -55,7 +55,7 @@ if (-not [IO.Path]::GetExtension($exePath) -and -not $IsMacOS) {
     Copy-Item -LiteralPath (Join-Path $Source 'packaging/linux/prototype-viewer.desktop') -Destination $Out
     Copy-Item -LiteralPath (Join-Path $Source 'assets/branding/prototype-logo.svg') -Destination (Join-Path $Out 'prototype-viewer.svg')
 }
-$manifest = if ($IsMacOS) { 'prototype-install.json' } else { 'moon-viewer-install.json' }
+$manifest = if ($IsMacOS) { 'prototype-install.json' } else { 'dragon-viewer-install.json' }
 $manifestPath = Join-Path (Resolve-Path -LiteralPath $Out).Path $manifest
 $json = @{ schema = 1; version = $version } | ConvertTo-Json
 [IO.File]::WriteAllText($manifestPath, $json, [Text.UTF8Encoding]::new($false))

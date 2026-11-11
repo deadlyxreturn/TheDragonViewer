@@ -1,4 +1,4 @@
-//! The rez effect (Preferences › Moon Viewer, "Rez effect"): nothing shows grey
+//! The rez effect (Preferences › Dragon Viewer, "Rez effect"): nothing shows grey
 //! while it loads. A face whose texture has not come (its slot still points
 //! at the grey placeholder) shimmers with stars in the shader itself
 //! (`rez_still_grey` in object.wgsl), near or far, from its first frame, and

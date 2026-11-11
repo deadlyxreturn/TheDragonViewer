@@ -92,6 +92,7 @@ pub(crate) mod numeric_drag;
 pub mod object_actions;
 pub mod options;
 pub mod prototype_art;
+pub mod dragon_art;
 pub mod owned_land;
 pub mod parcel_icons;
 pub mod pay;

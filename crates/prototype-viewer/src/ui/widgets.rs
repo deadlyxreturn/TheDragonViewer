@@ -874,19 +874,14 @@ impl<'a> Floater<'a> {
                         buttons_left = ui.cursor().right();
                         if truncate {
                             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                                let moon_title = self.id == "conversations" && !p.high_contrast;
+                                let moon_title = matches!(self.id, "conversations" | "preferences") && !p.high_contrast;
                                 if moon_title {
-                                    // Moon Viewer: a gold crescent and a star before the name
-                                    let (rect, _) = ui.allocate_exact_size(Vec2::new(26.0, 22.0), Sense::hover());
-                                    if let Some(t) = super::icons::global("moon-crest") {
-                                        let uv = egui::Rect::from_min_max(egui::Pos2::ZERO, egui::pos2(1.0, 1.0));
-                                        ui.painter().image(t.id(), egui::Rect::from_center_size(rect.center(), Vec2::splat(24.0)), uv, Color32::WHITE);
-                                    } else {
-                                        paint_glyph(ui.painter(), "moon-filled", rect.left_center() + Vec2::new(9.0, 0.0), 17.0, p.amber);
-                                        moon_star(ui.painter(), rect.left_center() + Vec2::new(22.0, -1.0), 4.2, p.amber);
-                                    }
+                                    // Dragon Viewer: the title orb before the name
+                                    let (rect, _) = ui.allocate_exact_size(Vec2::new(32.0, 28.0), Sense::hover());
+                                    super::dragon_art::glow(ui.painter(), rect.center(), 18.0, Color32::from_rgb(255, 150, 0), 0.8);
+                                    super::dragon_art::orb(ui.painter(), rect.center(), 14.0, 4);
                                 } else {
-                                    let icon = if big { "moon-brand" } else { framed_header.unwrap_or_else(|| workspace::window_icon(self.id)) };
+                                    let icon = if big { "dragon-brand" } else { framed_header.unwrap_or_else(|| workspace::window_icon(self.id)) };
                                     let (rect, _) = ui.allocate_exact_size(Vec2::splat(if big { 30.0 } else { 17.0 }), Sense::hover());
                                     let bear = if big { super::prototype_art::texture(ui.ctx(), super::prototype_art::Art::Bear) } else { None };
                                     if let Some(t) = bear {
@@ -903,10 +898,10 @@ impl<'a> Floater<'a> {
                                     }
                                 }
                                 let title = if moon_title {
-                                    RichText::new(&self.title)
-                                        .font(egui::FontId::new(17.0, super::fonts::display_serif(ui.ctx())))
-                                        .italics()
-                                        .color(p.ink)
+                                    let family = super::fonts::display_bold(ui.ctx());
+                                    let plain = family == egui::FontFamily::Proportional;
+                                    let t = RichText::new(&self.title).font(egui::FontId::new(21.0, family)).color(Color32::WHITE);
+                                    if plain { t.italics().strong() } else { t }
                                 } else {
                                     title
                                 };
@@ -1062,6 +1057,20 @@ impl<'a> Floater<'a> {
                     let layer = ctx.layer_painter(response.response.layer_id);
                     super::options::paint_window_trim(&layer, p, response.response.rect, radius, minimized);
                 } else if self.id == "conversations" && !minimized {
+                    // Dragon Viewer: the skin's messenger picture behind the
+                    // glass, darkened so the text stays readable
+                    if !p.high_contrast
+                        && let Some(t) = super::dragon_art::texture(ctx, "messenger-bg")
+                    {
+                        let rect = response.response.rect;
+                        let [w, h] = t.size();
+                        let scale = (rect.width() / w as f32).max(rect.height() / h as f32);
+                        let (sw, sh) = (rect.width() / (w as f32 * scale), rect.height() / (h as f32 * scale));
+                        let uv = egui::Rect::from_min_size(egui::pos2((1.0 - sw) * 0.5, (1.0 - sh) * 0.5), Vec2::new(sw, sh));
+                        let picture = egui::epaint::RectShape::filled(rect, radius, Color32::WHITE).with_texture(t.id(), uv);
+                        let shade = egui::Shape::rect_filled(rect, radius, Color32::from_rgba_unmultiplied(8, 6, 22, 150));
+                        painter.set(slot, egui::Shape::Vec(vec![picture.into(), shade]));
+                    }
                     let layer = ctx.layer_painter(response.response.layer_id);
                     moon_window_rim(&layer, p, response.response.rect, radius);
                 }
@@ -1850,7 +1859,7 @@ pub(crate) fn window_borderless(ctx: &egui::Context) -> bool {
     ctx.data(|d| d.get_temp::<bool>(egui::Id::new(BORDERLESS_KEY)).unwrap_or(false))
 }
 
-/// One of Moon Viewer's glossy caption buttons (minimize, maximize, close):
+/// One of Dragon Viewer's glossy caption buttons (minimize, maximize, close):
 /// a lavender glass rounded square with a pearl reflection and a gold rim.
 pub(crate) fn glossy_caption_button(ui: &mut egui::Ui, p: &Palette, icon: &str, label: &str, close: bool, size: Vec2) -> bool {
     let (rect, response) = ui.allocate_exact_size(size, Sense::click());
@@ -1920,9 +1929,9 @@ pub(crate) fn window_resize_grips(ctx: &egui::Context) -> Option<winit::window::
     started
 }
 
-/// A small four-point star (Moon Viewer's accents), filled.
+/// A small four-point star (Dragon Viewer's accents), filled.
 pub(crate) fn moon_star(painter: &egui::Painter, center: egui::Pos2, r: f32, color: Color32) {
-    if let Some(t) = super::icons::global("moon-star") {
+    if let Some(t) = super::icons::global("dragon-star") {
         let uv = egui::Rect::from_min_max(egui::Pos2::ZERO, egui::pos2(1.0, 1.0));
         painter.image(t.id(), egui::Rect::from_center_size(center, Vec2::splat(r * 2.6)), uv, Color32::from_white_alpha(color.a().max(200)));
         return;
@@ -1941,7 +1950,7 @@ pub(crate) fn moon_star(painter: &egui::Painter, center: egui::Pos2, r: f32, col
     painter.add(egui::Shape::convex_polygon(pts, color, Stroke::NONE));
 }
 
-/// Moon Viewer's glossy glass face: light lavender glass with a pearl
+/// Dragon Viewer's glossy glass face: light lavender glass with a pearl
 /// reflection on its upper half and a pearl rim (gold when hot), pink when
 /// active. For pills (radius = half the height), discs and fields.
 pub(crate) fn moon_glass(painter: &egui::Painter, p: &Palette, rect: egui::Rect, radius: f32, hot: bool, active: bool) {
@@ -1951,11 +1960,11 @@ pub(crate) fn moon_glass(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
         return;
     }
     let (top, bottom) = if active {
-        (p.rose.lerp_to_gamma(p.ink, 0.3).gamma_multiply(0.9), p.rose.gamma_multiply(0.6))
+        (Color32::from_rgb(255, 196, 70), Color32::from_rgb(232, 92, 0))
     } else if hot {
-        (p.indigo_light.lerp_to_gamma(p.ink, 0.25).gamma_multiply(0.62), p.navy.gamma_multiply(0.42))
+        (Color32::from_rgba_unmultiplied(110, 76, 70, 230), Color32::from_rgba_unmultiplied(48, 34, 52, 230))
     } else {
-        (p.indigo_light.lerp_to_gamma(p.ink, 0.2).gamma_multiply(0.48), p.navy.gamma_multiply(0.34))
+        (Color32::from_rgba_unmultiplied(70, 66, 96, 215), Color32::from_rgba_unmultiplied(26, 24, 46, 215))
     };
     gradient_rect(painter, rect, radius, top, bottom);
     let shine = egui::Rect::from_min_max(
@@ -1963,54 +1972,54 @@ pub(crate) fn moon_glass(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
         egui::pos2(rect.right() - radius.min(rect.width() * 0.25) * 0.5 - 1.5, rect.top() + rect.height() * 0.48),
     );
     if shine.is_positive() {
-        gradient_rect(painter, shine, (radius - 2.0).max(1.0), p.ink.gamma_multiply(0.34), Color32::TRANSPARENT);
+        gradient_rect(painter, shine, (radius - 2.0).max(1.0), Color32::from_white_alpha(if active { 90 } else { 30 }), Color32::TRANSPARENT);
     }
-    let rim = if hot || active { p.amber.lerp_to_gamma(p.ink, 0.35) } else { p.ink.gamma_multiply(0.42) };
+    let rim = if hot || active { Color32::from_rgb(255, 225, 161) } else { Color32::from_rgba_unmultiplied(255, 190, 70, 120) };
     painter.rect_stroke(rect, radius, Stroke::new(1.2, rim), egui::StrokeKind::Inside);
 }
 
 /// A thin gold rim with a pearl inner line and a gloss across the top: the
-/// light frame of Moon Viewer's windows. Drawn from the window's rect, so it
+/// light frame of Dragon Viewer's windows. Drawn from the window's rect, so it
 /// follows any size.
 pub(crate) fn moon_window_rim(painter: &egui::Painter, p: &Palette, rect: egui::Rect, radius: f32) {
     if p.high_contrast {
         return;
     }
-    let pale = p.amber.lerp_to_gamma(p.ink, 0.6);
-    let gloss = egui::Rect::from_min_max(rect.min + Vec2::new(4.0, 4.0), egui::pos2(rect.right() - 4.0, rect.top() + 46.0_f32.min(rect.height() * 0.35)));
-    gradient_rect(painter, gloss, (radius - 4.0).max(0.0), p.ink.gamma_multiply(0.18), Color32::TRANSPARENT);
-    // a thick pearl band like a glass bezel, between two gold lines
-    painter.rect_stroke(rect.shrink(1.0), radius, Stroke::new(6.0, p.ink.gamma_multiply(0.16)), egui::StrokeKind::Inside);
-    painter.rect_stroke(rect.shrink(1.5), radius, Stroke::new(2.0, p.ink.gamma_multiply(0.22)), egui::StrokeKind::Inside);
-    painter.rect_stroke(rect.shrink(0.5), radius, Stroke::new(1.4, p.amber.gamma_multiply(0.95)), egui::StrokeKind::Inside);
-    painter.rect_stroke(rect.shrink(6.5), (radius - 6.0).max(0.0), Stroke::new(1.0, pale.gamma_multiply(0.55)), egui::StrokeKind::Inside);
+    // Dragon Viewer: a soft gloss over the title, then the gold rim
+    let gloss = egui::Rect::from_min_max(rect.min + Vec2::new(4.0, 4.0), egui::pos2(rect.right() - 4.0, rect.top() + 40.0_f32.min(rect.height() * 0.3)));
+    gradient_rect(painter, gloss, (radius - 4.0).max(0.0), Color32::from_white_alpha(26), Color32::TRANSPARENT);
+    let _ = p;
+    super::dragon_art::gold_rim(painter, rect.shrink(1.5), radius);
 }
 
 pub(super) fn glass_pill(painter: &egui::Painter, p: &Palette, rect: egui::Rect, selected: bool, hot: bool) -> Color32 {
-    let radius = rect.height() * 0.5;
+    let radius = (rect.height() * 0.22).min(7.0);
     if p.high_contrast {
         painter.rect_filled(rect, radius, if selected { p.violet } else { p.field });
         painter.rect_stroke(rect, radius, Stroke::new(1.0, p.ink), egui::StrokeKind::Inside);
         return if selected { p.on_accent } else { p.ink };
     }
-    let pearl = p.ink.lerp_to_gamma(p.violet_pale, 0.45);
+    // Dragon Viewer: dark slate bevels; the chosen one blazing orange
     if selected {
-        painter.rect_filled(rect.expand(3.0), radius + 3.0, p.rose.gamma_multiply(if hot { 0.27 } else { 0.16 }));
-        painter.rect_filled(rect.expand(1.4), radius + 1.4, p.rose.gamma_multiply(0.35));
-        gradient_rect(painter, rect, radius, p.violet_light, p.indigo.lerp_to_gamma(p.rose, 0.52));
-    } else {
-        let gloss = if hot { 0.62 } else { 0.46 };
-        gradient_rect(painter, rect, radius, p.indigo_light.lerp_to_gamma(p.ink, 0.15).gamma_multiply(gloss), p.navy.gamma_multiply(0.30));
+        painter.rect_filled(rect.expand(4.0), radius + 4.0, Color32::from_rgba_unmultiplied(255, 120, 0, if hot { 70 } else { 46 }));
+        painter.rect_filled(rect.expand(1.5), radius + 1.5, Color32::from_rgb(120, 40, 0));
+        gradient_rect(painter, rect, radius, Color32::from_rgb(255, 196, 70), Color32::from_rgb(232, 92, 0));
+        let top = egui::Rect::from_min_max(rect.min + egui::vec2(3.0, 1.5), egui::pos2(rect.right() - 3.0, rect.center().y));
+        gradient_rect(painter, top, radius, Color32::from_white_alpha(90), Color32::TRANSPARENT);
+        painter.rect_stroke(rect, radius, Stroke::new(1.2, Color32::from_rgb(255, 236, 160)), egui::StrokeKind::Inside);
+        return Color32::WHITE;
     }
-    let top = egui::Rect::from_min_max(rect.min + egui::vec2(4.0, 1.8), egui::pos2(rect.right() - 4.0, rect.center().y));
-    gradient_rect(painter, top, top.height() * 0.45, pearl.gamma_multiply(0.42), Color32::TRANSPARENT);
-    let rim = if selected || hot {
-        p.amber.lerp_to_gamma(pearl, 0.45)
+    let (top, bottom) = if hot {
+        (Color32::from_rgba_unmultiplied(110, 76, 70, 230), Color32::from_rgba_unmultiplied(48, 34, 52, 230))
     } else {
-        pearl.gamma_multiply(0.55)
+        (Color32::from_rgba_unmultiplied(70, 66, 96, 215), Color32::from_rgba_unmultiplied(26, 24, 46, 215))
     };
+    gradient_rect(painter, rect, radius, top, bottom);
+    let shine = egui::Rect::from_min_max(rect.min + egui::vec2(2.0, 1.2), egui::pos2(rect.right() - 2.0, rect.top() + rect.height() * 0.45));
+    gradient_rect(painter, shine, radius, Color32::from_white_alpha(28), Color32::TRANSPARENT);
+    let rim = if hot { Color32::from_rgb(255, 225, 161) } else { Color32::from_rgba_unmultiplied(200, 210, 242, 90) };
     painter.rect_stroke(rect, radius, Stroke::new(1.0, rim), egui::StrokeKind::Inside);
-    if selected { p.on_accent } else { p.ink }
+    p.ink
 }
 
 /// A rounded rectangle filled with a vertical gradient: the theme's rect,
@@ -2093,28 +2102,41 @@ pub fn paint_slider_knob(ui: &egui::Ui, p: &Palette, resp: &egui::Response, frac
     let rail = egui::Rect::from_center_size(rect.center(), Vec2::new(rect.width(), rail_h));
     let fill = egui::Rect::from_min_max(rail.min, egui::pos2(x, rail.bottom()));
     let painter = ui.painter();
+    let hot = resp.hovered() || resp.dragged() || resp.has_focus();
+    let center = egui::pos2(x, rect.center().y);
+    if !p.high_contrast {
+        dragon_rail(painter, rail, x);
+        // Dragon Viewer: an orb rides the rail
+        if hot {
+            super::dragon_art::glow(painter, center, 16.0, Color32::from_rgb(255, 150, 0), 0.9);
+        }
+        super::dragon_art::orb(painter, center, if hot { 13.0 } else { 11.5 }, 4);
+        return;
+    }
     painter.rect_filled(rail, rail_h * 0.5, p.raised.lerp_to_gamma(p.muted_dim, 0.25)); // theme-guard: content — Prototype's slider rail
     if fill.width() > 1.0 {
         gradient_rect(painter, fill, rail_h * 0.5, p.violet.lerp_to_gamma(p.field, 0.25), p.violet);
     }
-    let hot = resp.hovered() || resp.dragged() || resp.has_focus();
-    let center = egui::pos2(x, rect.center().y);
-    if !p.high_contrast
-        && let Some(t) = super::icons::global("moon-star")
-    {
-        // Moon Viewer: a gold star rides the rail
-        if hot {
-            painter.circle_filled(center, 11.0, p.amber.gamma_multiply(0.18));
-        }
-        let size = if hot { 26.0 } else { 22.0 };
-        let uv = egui::Rect::from_min_max(egui::Pos2::ZERO, egui::pos2(1.0, 1.0));
-        painter.image(t.id(), egui::Rect::from_center_size(center, Vec2::splat(size)), uv, Color32::WHITE);
-        return;
-    }
     white_knob(painter, p, center, 7.5, hot, true);
 }
 
-/// Any slider of the interface in Moon Viewer's look: the stock slider (its
+/// Dragon Viewer's slider rail: a dark groove with a thin pale rim, filled
+/// up to `x` with a glowing yellow-to-orange bar.
+pub(crate) fn dragon_rail(painter: &egui::Painter, rail: egui::Rect, x: f32) {
+    let r = rail.height() * 0.5;
+    painter.rect_filled(rail, r, Color32::from_rgb(11, 16, 30));
+    painter.rect_stroke(rail, r, Stroke::new(1.0, Color32::from_rgba_unmultiplied(200, 210, 242, 110)), egui::StrokeKind::Outside);
+    let fill = egui::Rect::from_min_max(rail.min, egui::pos2(x.clamp(rail.left(), rail.right()), rail.bottom()));
+    if fill.width() > 1.0 {
+        painter.rect_filled(fill.expand(2.0), r + 2.0, Color32::from_rgba_unmultiplied(255, 108, 0, 50));
+        let upper = egui::Rect::from_min_max(fill.min, egui::pos2(fill.right(), fill.center().y));
+        let lower = egui::Rect::from_min_max(egui::pos2(fill.left(), fill.center().y), fill.max);
+        gradient_rect(painter, upper, 0.0, Color32::from_rgb(255, 248, 149), Color32::from_rgb(255, 160, 20));
+        gradient_rect(painter, lower, 0.0, Color32::from_rgb(255, 108, 0), Color32::from_rgb(255, 185, 77));
+    }
+}
+
+/// Any slider of the interface in Dragon Viewer's look: the stock slider (its
 /// value field, steps, parser…) with its handle hidden, the pink rail and
 /// the gold star knob painted over it. `build` adds the options to the
 /// stock slider; `log` when it is logarithmic (the knob follows the scale).

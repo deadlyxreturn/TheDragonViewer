@@ -1,10 +1,10 @@
-# Moon Viewer privacy policy
+# Dragon Viewer privacy policy
 
 ## Grid services
 
 Signing in sends your account identifier, authentication data and viewer
 details to the grid you choose. Second Life login goes to Linden Lab.
-Moon Viewer also sends the normal simulator traffic for actions such as
+Dragon Viewer also sends the normal simulator traffic for actions such as
 movement, inventory requests and chat. Linden Lab describes how it handles
 that data in its [privacy policy](https://www.lindenlab.com/privacy).
 Use separate credentials for independently operated grids.
@@ -22,12 +22,12 @@ Use separate credentials for independently operated grids.
 
 ## Local storage
 
-Moon Viewer stores its settings, selected logs and caches in Moon Viewer
-directories on your PC. If you choose to remember credentials, Moon
+Dragon Viewer stores its settings, selected logs and caches in Dragon Viewer
+directories on your PC. If you choose to remember credentials, Dragon Viewer
 Viewer uses the operating system's credential store. The Windows
 uninstaller keeps these files and saved credentials for later installs.
-Use Preferences to review the Moon Viewer data folders, clear saved
+Use Preferences to review the Dragon Viewer data folders, clear saved
 accounts and clear the cache.
 
-Moon Viewer operates no project analytics or advertising service. Direct
-privacy questions to the [project issue tracker](https://github.com/deadlyxreturn/MoonViewer/issues).
+Dragon Viewer operates no project analytics or advertising service. Direct
+privacy questions to the [project issue tracker](https://github.com/deadlyxreturn/TheDragonViewer/issues).

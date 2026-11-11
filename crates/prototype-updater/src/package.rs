@@ -160,14 +160,14 @@ fn components(name: &str) -> Result<Vec<&str>> {
 }
 
 pub fn extract(path: &Path, root: &Path, tag: &str, cancel: &Cancel) -> Result<PathBuf> {
-    unpack(path, root, &format!("Moon-Viewer-{tag}-windows-x64"), cancel)?;
-    let manifest: InstallManifest = serde_json::from_slice(&fs::read(root.join("moon-viewer-install.json"))?)?;
+    unpack(path, root, &format!("Dragon-Viewer-{tag}-windows-x64"), cancel)?;
+    let manifest: InstallManifest = serde_json::from_slice(&fs::read(root.join("dragon-viewer-install.json"))?)?;
     ensure!(
         manifest.schema == 1 && manifest.version == tag.trim_start_matches('v'),
         "package version mismatch"
     );
     ensure!(
-        root.join("moon-viewer.exe").is_file() && root.join("assets").is_dir() && root.join("LICENSE").is_file(),
+        root.join("dragon-viewer.exe").is_file() && root.join("assets").is_dir() && root.join("LICENSE").is_file(),
         "incomplete viewer package"
     );
     Ok(root.to_path_buf())

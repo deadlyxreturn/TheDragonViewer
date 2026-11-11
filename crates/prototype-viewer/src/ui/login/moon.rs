@@ -1,6 +1,11 @@
-//! Decorative login elements. Hit targets and actions stay in the login form.
+//! Dragon Viewer's login card pieces: the card's glass and gold rim, its
+//! fields, the LOG IN jewel and the ornaments around the card. Hit targets
+//! and actions stay in the login form. Each piece shows the skin's picture
+//! when it has one (`login-frame`, `login-button`, `login-crest`,
+//! `cloud-scroll`, `balls/ball-*`), else a drawn version.
 use crate::theme::Palette;
-use egui::{Color32, Painter, Pos2, Rect, Shape, Stroke, StrokeKind, Vec2, pos2, vec2};
+use crate::ui::dragon_art;
+use egui::{Color32, Painter, Rect, Shape, Stroke, StrokeKind, pos2, vec2};
 
 use super::super::widgets::gradient_rect_shape;
 
@@ -23,129 +28,141 @@ pub(super) fn polished_pill(ctx: &egui::Context, rect: Rect, top: Color32, botto
         ));
     }
     face.push(Shape::rect_stroke(rect, radius, Stroke::new(1.4, edge), StrokeKind::Inside));
-    face.push(Shape::rect_stroke(
-        rect.shrink(2.3),
-        radius - 2.3,
-        Stroke::new(0.8, light.gamma_multiply(0.65)),
-        StrokeKind::Inside,
-    ));
     Shape::Vec(face)
 }
 
-pub(super) fn glass_tint(ctx: &egui::Context, rect: Rect, p: &Palette) -> Shape {
-    let rect = rect.shrink(4.0);
-    let lavender = p.indigo_light.lerp_to_gamma(p.ink, 0.3);
-    Shape::Vec(vec![
-        gradient_rect_shape(ctx, rect, 52.0, lavender.gamma_multiply(0.16), lavender.gamma_multiply(0.04)),
-        gradient_rect_shape(ctx, rect, 52.0, Color32::TRANSPARENT, p.violet_pale.gamma_multiply(0.17)),
-    ])
-}
-
-fn star(painter: &Painter, center: Pos2, size: f32, color: Color32) {
-    let points = [
-        (0.0, -1.0),
-        (0.16, -0.18),
-        (0.8, 0.0),
-        (0.16, 0.18),
-        (0.0, 1.0),
-        (-0.16, 0.18),
-        (-0.8, 0.0),
-        (-0.16, -0.18),
+/// A dark field with a gold rim and a faint glow under it (the card's text
+/// fields and menus).
+pub(super) fn gold_field(ctx: &egui::Context, rect: Rect, edge: Color32, hot: bool) -> Shape {
+    let radius = 7.0;
+    let mut v = vec![
+        gradient_rect_shape(
+            ctx,
+            rect,
+            radius,
+            Color32::from_rgba_unmultiplied(28, 26, 52, 225),
+            Color32::from_rgba_unmultiplied(12, 12, 30, 235),
+        ),
+        Shape::rect_stroke(rect, radius, Stroke::new(1.6, edge), StrokeKind::Inside),
+        // a light line under the top edge: the bevel
+        Shape::line_segment(
+            [rect.left_top() + vec2(radius, 2.0), rect.right_top() + vec2(-radius, 2.0)],
+            Stroke::new(1.0, Color32::from_white_alpha(30)),
+        ),
     ];
-    painter.add(Shape::closed_line(
-        points.into_iter().map(|(x, y)| center + vec2(x, y) * size).collect(),
-        Stroke::new(1.0, color),
-    ));
-    painter.line_segment(
-        [center - vec2(0.0, size * 0.65), center + vec2(0.0, size * 0.65)],
-        Stroke::new(1.2, color),
-    );
-    painter.line_segment(
-        [center - vec2(size * 0.5, 0.0), center + vec2(size * 0.5, 0.0)],
-        Stroke::new(1.2, color),
-    );
-}
-
-fn crystal(painter: &Painter, center: Pos2, size: f32, palette: &Palette) {
-    let top = center - vec2(0.0, size);
-    let bottom = center + vec2(0.0, size);
-    let left = center - vec2(size * 0.53, 0.0);
-    let right = center + vec2(size * 0.53, 0.0);
-    painter.add(Shape::convex_polygon(
-        vec![top, right, bottom, left],
-        palette.indigo,
-        Stroke::new(1.5, palette.amber),
-    ));
-    painter.add(Shape::convex_polygon(
-        vec![top, right, center, left],
-        palette.violet_light,
-        Stroke::NONE,
-    ));
-    painter.line_segment([top, bottom], Stroke::new(0.8, palette.violet_pale));
-    star(painter, center, size * 0.6, palette.ink);
-}
-
-pub(super) fn frame_art(ctx: &egui::Context, rect: Rect) -> Option<Shape> {
-    let texture = super::super::prototype_art::texture(ctx, super::super::prototype_art::Art::Frame)?;
-    // The usable panel in the source artwork spans x=122..903 and
-    // y=124..1397. Scale that opening to the panel; ornaments overhang it.
-    let scale = vec2(rect.width() / 781.0, rect.height() / 1273.0);
-    let bounds = Rect::from_min_size(rect.min - vec2(122.0, 124.0) * scale, vec2(1024.0, 1536.0) * scale);
-    Some(Shape::image(texture.id(), bounds, full_uv(), Color32::WHITE))
-}
-
-fn full_uv() -> Rect {
-    Rect::from_min_max(Pos2::ZERO, pos2(1.0, 1.0))
-}
-
-pub(super) fn divider(painter: &Painter, rect: Rect, p: &Palette) {
-    let center = rect.center();
-    let line = Stroke::new(1.0, p.amber.gamma_multiply(0.74));
-    painter.line_segment([pos2(rect.left(), center.y), center - vec2(20.0, 0.0)], line);
-    painter.line_segment([center + vec2(20.0, 0.0), pos2(rect.right(), center.y)], line);
-    crystal(painter, center, 9.5, p);
-    for sign in [-1.0, 1.0] {
-        star(painter, center + vec2(sign * 32.0, 0.0), 6.0, p.amber);
+    if hot {
+        v.insert(
+            0,
+            Shape::rect_stroke(rect.expand(2.0), radius + 2.0, Stroke::new(4.0, Color32::from_rgba_unmultiplied(255, 183, 44, 70)), StrokeKind::Outside),
+        );
     }
+    // the warm glow under the field's foot (the mockup's)
+    let foot = Rect::from_center_size(pos2(rect.center().x, rect.bottom() + 1.0), vec2(rect.width() * 0.74, 3.0));
+    v.push(gradient_rect_shape(
+        ctx,
+        foot,
+        1.5,
+        Color32::from_rgba_unmultiplied(255, 170, 40, 60),
+        Color32::TRANSPARENT,
+    ));
+    Shape::Vec(v)
 }
 
-pub(super) fn connect_button(painter: &Painter, rect: Rect, p: &Palette, active: bool, hot: bool) {
-    if !p.high_contrast
-        && let Some(texture) = super::super::prototype_art::texture(painter.ctx(), super::super::prototype_art::Art::Connect)
-    {
-        // Measured on the 2172×724 source: the gold-rimmed pill spans 78 % of
-        // the art's width and 42 % of its height, its centre sits at
-        // (50.5 %, 52.3 %). Size the art so that pill lines up with the
-        // fields above (the card's width) and centre it on the label; the
-        // wings and the crescent overhang it as in the concept.
-        const PILL_W: f32 = 0.78;
-        const PILL_H: f32 = 0.424;
-        const CENTER: Vec2 = vec2(0.5053, 0.5228);
-        let pill_w = (rect.width() - 30.0).max(1.0);
-        let pill_h = 50.0;
-        let size = vec2(pill_w / PILL_W, pill_h / PILL_H);
-        let bounds = Rect::from_center_size(rect.center() - (CENTER - vec2(0.5, 0.5)) * size, size);
-        let opacity = 255;
-        painter.image(texture.id(), bounds, full_uv(), Color32::from_white_alpha(opacity));
-        // the pink face inside the gold rim
-        let face = Rect::from_center_size(rect.center(), vec2(size.x * 0.7565, size.y * 0.355));
-        if hot {
-            // a soft sheen on the face and a rose glow, no hard outline
-            painter.rect_filled(face, face.height() * 0.5, Color32::from_white_alpha(26));
-            painter.rect_stroke(
-                face.expand(6.0),
-                face.height() * 0.5 + 6.0,
-                Stroke::new(5.0, p.rose.gamma_multiply(0.22)),
-                StrokeKind::Outside,
-            );
-        }
+/// The login card's face: the skin's `login-frame` stretched over it, or
+/// deep night glass with a soft top sheen in a gold rim.
+pub(super) fn card_face(ctx: &egui::Context, rect: Rect) -> Shape {
+    let radius = 39.0;
+    if let Some(t) = dragon_art::texture(ctx, "login-frame") {
+        return Shape::image(t.id(), rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+    }
+    let mut v = vec![
+        // the warm outer glow
+        Shape::rect_stroke(rect.expand(4.0), radius + 4.0, Stroke::new(9.0, Color32::from_rgba_unmultiplied(255, 120, 0, 34)), StrokeKind::Outside),
+        gradient_rect_shape(
+            ctx,
+            rect,
+            radius,
+            Color32::from_rgba_unmultiplied(46, 34, 84, 200),
+            Color32::from_rgba_unmultiplied(14, 10, 32, 225),
+        ),
+    ];
+    let sheen = Rect::from_min_max(rect.min + vec2(6.0, 6.0), pos2(rect.right() - 6.0, rect.top() + rect.height() * 0.3));
+    v.push(gradient_rect_shape(ctx, sheen, radius - 6.0, Color32::from_white_alpha(22), Color32::TRANSPARENT));
+    v.push(Shape::rect_stroke(rect, radius, Stroke::new(4.0, Color32::from_rgb(105, 44, 4)), StrokeKind::Outside));
+    v.push(Shape::rect_stroke(rect, radius, Stroke::new(3.0, Color32::from_rgb(240, 160, 30)), StrokeKind::Inside));
+    v.push(Shape::rect_stroke(rect.shrink(3.0), radius - 3.0, Stroke::new(1.2, Color32::from_rgba_unmultiplied(255, 236, 170, 170)), StrokeKind::Inside));
+    v.push(Shape::rect_stroke(rect.shrink(7.0), radius - 7.0, Stroke::new(1.0, Color32::from_rgba_unmultiplied(255, 190, 80, 60)), StrokeKind::Inside));
+    Shape::Vec(v)
+}
+
+/// The LOG IN jewel: the skin's `login-button` face (else the gold jewel),
+/// with an orb at each end.
+pub(super) fn connect_button(painter: &Painter, rect: Rect, p: &Palette, active: bool, hot: bool, pressed: bool) {
+    if p.high_contrast {
+        painter.rect_filled(rect.shrink2(vec2(18.0, 6.0)), 12.0, p.violet);
         return;
     }
-    let rect = rect.shrink2(vec2(18.0, 2.0));
-    let fill = if active { p.violet } else { p.indigo };
-    if p.high_contrast {
-        painter.rect_filled(rect, rect.height() * 0.5, p.violet);
-    } else {
-        painter.add(polished_pill(painter.ctx(), rect, p.violet_light, fill, p.ink, p.amber));
+    let face = rect.shrink2(vec2(0.0, 4.0));
+    let lit = active && hot;
+    if !dragon_art::paint_fill(
+        painter,
+        "login-button",
+        rect,
+        if pressed { Color32::from_gray(220) } else { Color32::WHITE },
+    ) {
+        // a hexagonal-ended jewel: pointed ends, a bright rim
+        if lit {
+            dragon_art::glow(painter, face.center(), face.width() * 0.45, Color32::from_rgb(252, 109, 4), 0.6);
+        }
+        let tip = face.height() * 0.5;
+        let points = |r: Rect, t: f32| {
+            vec![
+                pos2(r.left(), r.center().y),
+                pos2(r.left() + t, r.top()),
+                pos2(r.right() - t, r.top()),
+                pos2(r.right(), r.center().y),
+                pos2(r.right() - t, r.bottom()),
+                pos2(r.left() + t, r.bottom()),
+            ]
+        };
+        painter.add(Shape::convex_polygon(points(face, tip), Color32::from_rgb(110, 44, 0), Stroke::NONE));
+        let inner = face.shrink(3.0);
+        painter.add(Shape::convex_polygon(points(inner, tip - 2.0), Color32::from_rgb(255, 214, 120), Stroke::NONE));
+        let body = inner.shrink(3.0);
+        dragon_art::drawn_jewel(painter, body.shrink2(vec2(tip * 0.55, 0.0)), false, lit, pressed);
+        painter.add(Shape::closed_line(points(inner, tip - 2.0), Stroke::new(1.0, Color32::from_rgb(255, 246, 200))));
+    }
+    // the two orbs inside its ends
+    let r = (face.height() * 0.4).min(30.0);
+    let inset = face.height() * 0.62;
+    dragon_art::orb(painter, pos2(face.left() + inset, face.center().y), r, 4);
+    dragon_art::orb(painter, pos2(face.right() - inset, face.center().y), r, 1);
+    if !active {
+        painter.rect_filled(face.shrink2(vec2(face.height() * 1.2, 6.0)), 10.0, Color32::from_black_alpha(40));
     }
 }
+
+/// The crest over the card's top edge and the clouds at its lower corners
+/// (the skin's `login-crest` and `cloud-scroll`; a large orb when the skin
+/// has no crest).
+pub(super) fn card_ornaments(ctx: &egui::Context, card: Rect) {
+    let painter = ctx.layer_painter(egui::LayerId::new(egui::Order::Foreground, egui::Id::unique("dragon_login_ornaments")));
+    let crest = Rect::from_center_size(pos2(card.center().x, card.top() - 26.0), vec2(card.width() * 0.73, 155.0));
+    if !dragon_art::paint(&painter, "login-crest", crest, Color32::WHITE) {
+        let c = pos2(card.center().x, card.top() - 6.0);
+        dragon_art::glow(&painter, c, 66.0, Color32::from_rgb(255, 150, 0), 1.0);
+        painter.circle_filled(c, 44.0, Color32::from_rgb(70, 26, 0));
+        painter.circle_stroke(c, 44.0, Stroke::new(3.0, Color32::from_rgb(255, 200, 80)));
+        dragon_art::orb(&painter, c, 38.0, 4);
+    }
+    if let Some(t) = dragon_art::texture(ctx, "cloud-scroll") {
+        let [w, h] = t.size();
+        let size = vec2(140.0, 140.0 * h as f32 / w.max(1) as f32);
+        let uv = Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0));
+        let left = Rect::from_min_size(pos2(card.left() - 5.0, card.bottom() + 4.0 - size.y), size);
+        painter.image(t.id(), left, uv, Color32::WHITE);
+        let right = Rect::from_min_size(pos2(card.right() + 5.0 - size.x, card.bottom() + 4.0 - size.y), size);
+        painter.image(t.id(), right, Rect::from_min_max(pos2(1.0, 0.0), pos2(0.0, 1.0)), Color32::WHITE);
+    }
+}
+

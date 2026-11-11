@@ -6,8 +6,8 @@ use crossbeam_channel::{Receiver, Sender};
 use serde_json::Value;
 use std::time::{Duration, Instant};
 
-pub const ISSUES: &str = "https://github.com/deadlyxreturn/MoonViewer/issues";
-const API: &str = "https://api.github.com/repos/deadlyxreturn/MoonViewer/issues";
+pub const ISSUES: &str = "https://github.com/deadlyxreturn/TheDragonViewer/issues";
+const API: &str = "https://api.github.com/repos/deadlyxreturn/TheDragonViewer/issues";
 pub const VERIFY: &str = "https://github.com/login/device";
 // Public identifier, supplied by the project's GitHub App registration.
 pub const CLIENT_ID: &str = "Iv23liT7PLWClMLztI1W";

@@ -2,7 +2,7 @@
 //! window title ("Prototype <version> (Dev)"): cargo only exposes `debug` /
 //! `release` (PROFILE), while the profile's target directory names the
 //! custom ones (`debugging`, `ci`). On Windows it also embeds the resources
-//! of moon-viewer.exe: its icon and its version block.
+//! of dragon-viewer.exe: its icon and its version block.
 
 use std::path::Path;
 
@@ -22,6 +22,7 @@ fn main() {
         .unwrap_or_default();
     println!("cargo:rustc-env=PROTOTYPE_BUILD_PROFILE={dir}");
     dictionaries();
+    skin_files();
 
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         windows_resources();
@@ -30,7 +31,7 @@ fn main() {
         // executable exports nothing on its own
         if std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
             for symbol in ["NvOptimusEnablement", "AmdPowerXpressRequestHighPerformance"] {
-                println!("cargo:rustc-link-arg-bin=moon-viewer=/EXPORT:{symbol},DATA");
+                println!("cargo:rustc-link-arg-bin=dragon-viewer=/EXPORT:{symbol},DATA");
             }
         }
     }
@@ -74,7 +75,7 @@ fn dictionaries() {
 /// release must not ship without its icon again.
 fn windows_resources() {
     let manifest = std::env::var("CARGO_MANIFEST_DIR").expect("Cargo supplies CARGO_MANIFEST_DIR");
-    let icon = Path::new(&manifest).join("../../assets/branding/moon-viewer.ico");
+    let icon = Path::new(&manifest).join("../../assets/branding/dragon-viewer.ico");
     println!("cargo:rerun-if-changed={}", icon.display());
 
     let display = std::env::var("DEP_PROTOTYPE_VERSION_DISPLAY").expect("prototype-version's build script supplies the version");
@@ -88,17 +89,52 @@ fn windows_resources() {
 
     let mut res = winresource::WindowsResource::new();
     res.set_icon(&icon.to_string_lossy())
-        .set("ProductName", "Moon Viewer")
-        .set("FileDescription", "Moon Viewer")
+        .set("ProductName", "Dragon Viewer")
+        .set("FileDescription", "Dragon Viewer")
         .set("CompanyName", "Ryan Johnson")
-        .set("LegalCopyright", "Moon Viewer is based on Prototype by Ryan Johnson. GPL-3.0-or-later.")
-        .set("OriginalFilename", "moon-viewer.exe")
+        .set("LegalCopyright", "Dragon Viewer is based on Prototype by Ryan Johnson. GPL-3.0-or-later.")
+        .set("OriginalFilename", "dragon-viewer.exe")
         .set("ProductVersion", &display)
         .set("FileVersion", &display)
         .set_version_info(winresource::VersionInfo::PRODUCTVERSION, packed)
         .set_version_info(winresource::VersionInfo::FILEVERSION, packed);
     // the viewer only: the test binaries of this crate need no resources
-    if let Err(error) = res.compile_for("moon-viewer") {
-        panic!("Cannot embed the icon and version of moon-viewer.exe (rc.exe of the Windows SDK): {error}");
+    if let Err(error) = res.compile_for("dragon-viewer") {
+        panic!("Cannot embed the icon and version of dragon-viewer.exe (rc.exe of the Windows SDK): {error}");
     }
+}
+
+/// Dragon Viewer's skin (the repository's `skin/` folder: login background,
+/// orbs, buttons, ornaments, icons) embedded in the exe, so a picture
+/// committed there ships in the next build without any code change.
+fn skin_files() {
+    let manifest = std::env::var("CARGO_MANIFEST_DIR").expect("Cargo supplies CARGO_MANIFEST_DIR");
+    let root = Path::new(&manifest).join("../../skin");
+    println!("cargo:rerun-if-changed={}", root.display());
+    let mut files = Vec::new();
+    fn walk(dir: &Path, root: &Path, files: &mut Vec<(String, std::path::PathBuf)>) {
+        let Ok(entries) = std::fs::read_dir(dir) else { return };
+        let mut entries: Vec<_> = entries.flatten().collect();
+        entries.sort_by_key(|e| e.file_name());
+        for e in entries {
+            let path = e.path();
+            println!("cargo:rerun-if-changed={}", path.display());
+            if path.is_dir() {
+                walk(&path, root, files);
+            } else if let Ok(rel) = path.strip_prefix(root) {
+                let rel = rel.to_string_lossy().replace('\\', "/");
+                if !rel.ends_with(".md") && !rel.starts_with('.') {
+                    files.push((rel, path.canonicalize().unwrap_or(path)));
+                }
+            }
+        }
+    }
+    walk(&root, &root, &mut files);
+    let mut code = String::from("pub static SKIN_FILES: &[(&str, &[u8])] = &[\n");
+    for (name, path) in files {
+        code.push_str(&format!("    ({name:?}, include_bytes!({:?})),\n", path.display().to_string()));
+    }
+    code.push_str("];\n");
+    let out = Path::new(&std::env::var("OUT_DIR").expect("Cargo supplies OUT_DIR")).join("skin_files.rs");
+    std::fs::write(out, code).expect("the build folder is writable");
 }

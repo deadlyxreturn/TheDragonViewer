@@ -853,7 +853,7 @@ fn plain_head(ui: &mut egui::Ui, p: &Palette, title: &str) {
     ui.horizontal(|ui| {
         ui.add_space(6.0);
         let label = ui.label(section_title(ui, p, title));
-        // Moon Viewer: a fine gold rule to the edge, ending in a star
+        // Dragon Viewer: a fine gold rule to the edge, ending in a star
         if !p.high_contrast {
             let y = label.rect.center().y;
             let (l, r) = (label.rect.right() + 8.0, ui.max_rect().right() - 14.0);

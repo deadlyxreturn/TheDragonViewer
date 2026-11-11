@@ -19,7 +19,7 @@ pub const fn commit() -> &'static str {
 
 /// HTTP clients use the same version as the interface.
 pub const fn user_agent() -> &'static str {
-    concat!("MoonViewer/", env!("PROTOTYPE_COMPILED_VERSION"))
+    concat!("DragonViewer/", env!("PROTOTYPE_COMPILED_VERSION"))
 }
 
 /// SL's login uses four numeric components, as LLVersionInfo::getVersion:

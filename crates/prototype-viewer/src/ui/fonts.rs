@@ -485,7 +485,8 @@ const SEMIBOLD: &str = "prototype-semibold";
 /// Name of the interface font's regular face.
 const MAIN: &str = "prototype-main";
 const ICON_FALLBACK: &str = "emoji-icon-font";
-const MOON_SERIF: &str = "moon-viewer-display-serif";
+const MOON_SERIF: &str = "dragon-viewer-display-serif";
+const DRAGON_BOLD: &str = "dragon-viewer-display-bold";
 
 fn semibold_family() -> egui::FontFamily {
     egui::FontFamily::Name(SEMIBOLD.into())
@@ -504,6 +505,15 @@ pub fn semibold(ctx: &egui::Context) -> egui::FontFamily {
 /// fallback on machines where the system font is unavailable.
 pub(super) fn display_serif(ctx: &egui::Context) -> egui::FontFamily {
     let family = egui::FontFamily::Name(MOON_SERIF.into());
+    let known = ctx.fonts(|f| f.definitions().families.contains_key(&family));
+    if known { family } else { egui::FontFamily::Proportional }
+}
+
+/// Dragon Viewer's heavy italic display face (window titles, button labels):
+/// Windows' Segoe UI Black Italic (else Bold Italic), the interface font
+/// elsewhere.
+pub(super) fn display_bold(ctx: &egui::Context) -> egui::FontFamily {
+    let family = egui::FontFamily::Name(DRAGON_BOLD.into());
     let known = ctx.fonts(|f| f.definitions().families.contains_key(&family));
     if known { family } else { egui::FontFamily::Proportional }
 }
@@ -618,6 +628,21 @@ fn definitions(mut primary: egui::FontData, system: &[fallback::SystemFace]) -> 
             let mut family = defs.families.get(&egui::FontFamily::Proportional).cloned().unwrap_or_default();
             family.insert(0, MOON_SERIF.into());
             defs.families.insert(egui::FontFamily::Name(MOON_SERIF.into()), family);
+        }
+        static BOLD: std::sync::OnceLock<Option<Arc<egui::FontData>>> = std::sync::OnceLock::new();
+        let face = BOLD.get_or_init(|| {
+            let windows = std::env::var_os("WINDIR")?;
+            ["seguibli.ttf", "seguibi.ttf", "arialbi.ttf"].iter().find_map(|name| {
+                let bytes = std::fs::read(PathBuf::from(&windows).join("Fonts").join(name)).ok()?;
+                ttf_parser::Face::parse(&bytes, 0).ok()?;
+                Some(Arc::new(egui::FontData::from_owned(bytes)))
+            })
+        });
+        if let Some(face) = face {
+            defs.font_data.insert(DRAGON_BOLD.into(), Arc::clone(face));
+            let mut family = defs.families.get(&egui::FontFamily::Proportional).cloned().unwrap_or_default();
+            family.insert(0, DRAGON_BOLD.into());
+            defs.families.insert(egui::FontFamily::Name(DRAGON_BOLD.into()), family);
         }
     }
     defs

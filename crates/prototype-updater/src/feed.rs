@@ -8,10 +8,10 @@ use semver::Version;
 use serde::Deserialize;
 use std::time::Duration;
 
-pub const RELEASES: &str = "https://api.github.com/repos/deadlyxreturn/MoonViewer/releases?per_page=100";
-pub const RELEASE_PAGE: &str = "https://github.com/deadlyxreturn/MoonViewer/releases";
-const DOWNLOADS: &str = "https://github.com/deadlyxreturn/MoonViewer/releases/download";
-pub const POLICY: &str = "moon-viewer-update-policy.json";
+pub const RELEASES: &str = "https://api.github.com/repos/deadlyxreturn/TheDragonViewer/releases?per_page=100";
+pub const RELEASE_PAGE: &str = "https://github.com/deadlyxreturn/TheDragonViewer/releases";
+const DOWNLOADS: &str = "https://github.com/deadlyxreturn/TheDragonViewer/releases/download";
+pub const POLICY: &str = "dragon-viewer-update-policy.json";
 pub const MAX_ARCHIVE: u64 = 2 * 1024 * 1024 * 1024;
 /// How long an installation below a new minimum may still sign in, when
 /// the policy does not say (#3014): a show or a DJ set under way ends
@@ -205,7 +205,7 @@ impl Source {
             return Ok(None);
         }
         self.validate_url(&r.html_url)?;
-        let expected = format!("Moon-Viewer-{}-windows-x64.zip", r.tag_name);
+        let expected = format!("Dragon-Viewer-{}-windows-x64.zip", r.tag_name);
         let archive = r
             .assets
             .iter()
@@ -367,7 +367,7 @@ mod tests {
         let production = Source::default();
         assert!(
             production
-                .validate_url("https://github.com/deadlyxreturn/MoonViewer/releases")
+                .validate_url("https://github.com/deadlyxreturn/TheDragonViewer/releases")
                 .is_ok()
         );
         for url in [

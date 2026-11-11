@@ -42,7 +42,7 @@ pub fn logs_dir() -> PathBuf {
     if let Some(test) = prototype_updater::test_environment() {
         return test.root.join("logs");
     }
-    directories::ProjectDirs::from("org", "MoonViewer", "MoonViewer")
+    directories::ProjectDirs::from("org", "DragonViewer", "DragonViewer")
         .map(|d| d.data_local_dir().join("logs"))
         .unwrap_or_else(|| PathBuf::from("logs"))
 }

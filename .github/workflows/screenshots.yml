@@ -31,16 +31,16 @@ jobs:
       - name: Download the build
         uses: actions/download-artifact@v4
         with:
-          name: Moon-Viewer-${{ inputs.tag }}-windows-x64
+          name: Dragon-Viewer-${{ inputs.tag }}-windows-x64
           path: build
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
       - name: Unpack the portable viewer
         shell: pwsh
         run: |
-          $zip = Get-ChildItem build -Recurse -Filter 'Moon-Viewer-*-windows-x64.zip' | Select-Object -First 1
+          $zip = Get-ChildItem build -Recurse -Filter 'Dragon-Viewer-*-windows-x64.zip' | Select-Object -First 1
           Expand-Archive -LiteralPath $zip.FullName -DestinationPath viewer -Force
-          $exe = Get-ChildItem viewer -Recurse -Filter 'moon-viewer.exe' | Select-Object -First 1
+          $exe = Get-ChildItem viewer -Recurse -Filter 'dragon-viewer.exe' | Select-Object -First 1
           "MOON_EXE=$($exe.FullName)" >> $env:GITHUB_ENV
           "MOON_DIR=$($exe.DirectoryName)" >> $env:GITHUB_ENV
       - name: Software Vulkan (Mesa lavapipe + Vulkan loader)
@@ -83,6 +83,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: Moon-Viewer-screenshots
+          name: Dragon-Viewer-screenshots
           path: screenshots/
           if-no-files-found: warn

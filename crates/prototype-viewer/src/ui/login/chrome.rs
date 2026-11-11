@@ -62,13 +62,35 @@ fn menu_bar(ctx: &Context, p: &Palette, form: &mut LoginForm) -> LoginAction {
                         if !p.high_contrast {
                             super::super::prototype_bg::radial_glow(ui.painter(), mark.center(), 19.0, p.amber, 0.27);
                         }
-                        widgets::paint_glyph(ui.painter(), "moon-filled", mark.center(), 27.0, p.amber.lerp_to_gamma(p.ink, 0.36));
+                        super::super::dragon_art::orb(ui.painter(), mark.center(), 13.0, 4);
                         if screen.width() >= 650.0 {
-                            let font = egui::FontId::new(23.0, super::super::fonts::display_serif(ui.ctx()));
-                            ui.label(RichText::new("MOON VIEWER").font(font).extra_letter_spacing(1.0).color(p.ink));
+                            let font = egui::FontId::new(22.0, super::super::fonts::display_bold(ui.ctx()));
+                            let mut job = egui::text::LayoutJob::default();
+                            let gold = egui::Color32::from_rgb(255, 231, 130);
+                            job.append("DRAGON", 0.0, egui::TextFormat { font_id: font.clone(), color: gold, italics: true, ..Default::default() });
+                            job.append(" VIEWER", 0.0, egui::TextFormat { font_id: font, color: egui::Color32::WHITE, italics: true, ..Default::default() });
+                            ui.label(job);
                             ui.add_space(8.0);
                         }
                         ui.separator();
+                        // The mockup's menus: what works before login
+                        ui.menu_button(prototype_i18n::tr!("dragon-menu-file"), |ui| {
+                            menu_action(ui, prototype_i18n::tr!("common-preferences"), &mut action, LoginAction::Preferences);
+                            menu_action(ui, prototype_i18n::tr!("moon-login-advanced"), &mut action, LoginAction::Advanced);
+                            ui.separator();
+                            menu_action(ui, prototype_i18n::tr!("ui-login-exit"), &mut action, LoginAction::Quit);
+                        });
+                        ui.menu_button(prototype_i18n::tr!("dragon-menu-edit"), |ui| {
+                            menu_action(ui, prototype_i18n::tr!("common-preferences"), &mut action, LoginAction::Preferences);
+                        });
+                        ui.menu_button(prototype_i18n::tr!("dragon-menu-view"), |ui| {
+                            menu_action(ui, prototype_i18n::tr!("common-maximize"), &mut action, LoginAction::ToggleMaximize);
+                        });
+                        for name in [prototype_i18n::tr!("dragon-menu-world"), prototype_i18n::tr!("dragon-menu-build")] {
+                            ui.menu_button(name, |ui| {
+                                ui.add_enabled(false, egui::Button::new(prototype_i18n::tr!("dragon-menu-after-login")));
+                            });
+                        }
                         // Help only before login: news, updates, bug reports
                         ui.menu_button(prototype_i18n::tr!("moon-menu-help"), |ui| {
                             if ui.button(prototype_i18n::tr!("ui-login-news")).clicked() {
@@ -86,6 +108,12 @@ fn menu_bar(ctx: &Context, p: &Palette, form: &mut LoginForm) -> LoginAction {
                     });
                 });
             let edge = ui.min_rect().bottom();
+            // the skin's long gold ornament across the bar, left of the
+            // window buttons (the mockup's)
+            if !p.high_contrast {
+                let at = Rect::from_min_size(pos2(screen.right() - 215.0 - 285.0, screen.top() - 8.0), vec2(285.0, 58.0));
+                crate::ui::dragon_art::paint_fill(ui.painter(), "gold-dragon", at, egui::Color32::WHITE);
+            }
             if !p.high_contrast {
                 // a soft gold glow under the bar's edge
                 ui.painter().hline(screen.x_range(), edge + 1.0, egui::Stroke::new(4.0, p.amber.gamma_multiply(0.16)));

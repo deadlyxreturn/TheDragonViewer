@@ -1,9 +1,9 @@
-# Moon Viewer licence and credits
+# Dragon Viewer licence and credits
 
-Moon Viewer is distributed under the GNU General Public License, version 3
+Dragon Viewer is distributed under the GNU General Public License, version 3
 or any later version. It derives from Prototype by Ryan Johnson, beginning
 at revision `eede23767d4421f182ee4f0ab60f7eccaf417cbd`. See the
-[branding notes](assets/branding/MOON-VIEWER.md) for Moon Viewer artwork.
+[branding notes](assets/branding/MOON-VIEWER.md) for Dragon Viewer artwork.
 
 ## Prototype's original notice
 

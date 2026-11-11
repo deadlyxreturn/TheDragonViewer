@@ -1,16 +1,10 @@
-//! Moon Viewer's brand artwork and the alternate login backgrounds.
+//! Dragon Viewer's brand artwork and the alternate login backgrounds.
 //! They decode once in the background on first use.
 
 use egui::{Context, TextureHandle, TextureOptions};
 use std::sync::OnceLock;
 
-const MOON_PNG: &[u8] = include_bytes!("../../../../assets/branding/moon-viewer-login.png");
 const BG_JPG: &[u8] = include_bytes!("../../../../assets/branding/prototype-login-bg.jpg");
-const WORDMARK_PNG: &[u8] = include_bytes!("../../../../assets/branding/moon-viewer-lockup.png");
-const BEAR_PNG: &[u8] = include_bytes!("../../../../assets/branding/moon-viewer-icon.png");
-const FRAME_PNG: &[u8] = include_bytes!("../../../../assets/branding/moon-viewer-glass-login-frame.png");
-const CONNECT_PNG: &[u8] = include_bytes!("../../../../assets/branding/moon-viewer-glossy-login-button.png");
-const PREFERENCES_PNG: &[u8] = include_bytes!("../../../../assets/branding/moon-viewer-preferences-frame.png");
 const WAVE_JPG: &[u8] = include_bytes!("../../../../assets/branding/prototype-login-bg-wave.jpg");
 
 /// The login background chosen in Preferences › Appearance (the setting
@@ -39,7 +33,11 @@ pub fn background(ctx: &Context) -> Option<TextureHandle> {
         3 => Art::Background,
         _ => Art::Moon,
     };
-    texture(ctx, art).or_else(|| texture(ctx, Art::Moon))
+    match art {
+        // Dragon Viewer: the skin's wallpaper (skin/background)
+        Art::Moon => super::dragon_art::texture(ctx, "background"),
+        _ => texture(ctx, art).or_else(|| super::dragon_art::texture(ctx, "background")),
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -58,13 +56,13 @@ pub enum Art {
 impl Art {
     fn bytes(self) -> std::borrow::Cow<'static, [u8]> {
         match self {
-            Art::Moon => MOON_PNG.into(),
+            Art::Moon => Vec::new().into(),
             Art::Background => BG_JPG.into(),
-            Art::Wordmark => WORDMARK_PNG.into(),
-            Art::Bear => BEAR_PNG.into(),
-            Art::Frame => FRAME_PNG.into(),
-            Art::Connect => CONNECT_PNG.into(),
-            Art::PreferencesFrame => PREFERENCES_PNG.into(),
+            Art::Wordmark => Vec::new().into(),
+            Art::Bear => Vec::new().into(),
+            Art::Frame => Vec::new().into(),
+            Art::Connect => Vec::new().into(),
+            Art::PreferencesFrame => Vec::new().into(),
             Art::Wave => WAVE_JPG.into(),
             Art::Custom => custom_background_path()
                 .and_then(|path| std::fs::read(path).map_err(|e| log::warn!("login background: {e}")).ok())
@@ -74,13 +72,13 @@ impl Art {
     }
     fn name(self) -> &'static str {
         match self {
-            Art::Moon => "moon-viewer-background",
+            Art::Moon => "dragon-viewer-background",
             Art::Background => "prototype-bg",
-            Art::Wordmark => "moon-viewer-wordmark",
-            Art::Bear => "moon-viewer-crest",
-            Art::Frame => "moon-viewer-login-frame",
-            Art::Connect => "moon-viewer-connect",
-            Art::PreferencesFrame => "moon-viewer-preferences-frame",
+            Art::Wordmark => "dragon-viewer-wordmark",
+            Art::Bear => "dragon-viewer-crest",
+            Art::Frame => "dragon-viewer-login-frame",
+            Art::Connect => "dragon-viewer-connect",
+            Art::PreferencesFrame => "dragon-viewer-preferences-frame",
             Art::Wave => "prototype-wave",
             Art::Custom => "prototype-custom-bg",
         }

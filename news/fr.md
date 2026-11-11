@@ -1,7 +1,7 @@
-<!-- Moon Viewer login screen news (fr). One "##" heading per item, newest first. -->
+<!-- Dragon Viewer login screen news (fr). One "##" heading per item, newest first. -->
 
-# Actualités de Moon Viewer
+# Actualités de Dragon Viewer
 
-## 2026-11-09 — Bienvenue dans Moon Viewer
-Depuis le Palais de la Lune, découvrez le verre lavande des Préférences, des Conversations et des autres fenêtres. Les avatars et les objets apparaissent dans un éclat d’étoiles.
-[Code source et instructions de compilation](https://github.com/deadlyxreturn/MoonViewer)
+## 2026-11-11 — Bienvenue dans Dragon Viewer
+Verre de nuit profonde aux bords dorés, onglets et boutons orange et curseur à orbes, de l’écran de connexion aux Préférences et aux Conversations. Personnalisez-le avec les images du dossier skin.
+[Code source et instructions de compilation](https://github.com/deadlyxreturn/TheDragonViewer)

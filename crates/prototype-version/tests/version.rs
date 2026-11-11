@@ -53,7 +53,7 @@ fn sources_without_tags_or_git_are_clearly_identified() {
 
 #[test]
 fn runtime_and_http_read_the_compiled_version() {
-    assert_eq!(prototype_version::user_agent(), format!("MoonViewer/{}", prototype_version::version()));
+    assert_eq!(prototype_version::user_agent(), format!("DragonViewer/{}", prototype_version::version()));
     let version = semver::Version::parse(prototype_version::version()).unwrap();
     assert!(prototype_version::login_version().starts_with(&format!("{}.{}.{}.", version.major, version.minor, version.patch)));
 }

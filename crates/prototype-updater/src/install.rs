@@ -10,7 +10,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-const EXE: &str = "moon-viewer.exe";
+const EXE: &str = "dragon-viewer.exe";
 const ACK_ENV: &str = "PROTOTYPE_UPDATE_ACK";
 const ALLOWED: &[&str] = &[
     EXE,
@@ -20,7 +20,7 @@ const ALLOWED: &[&str] = &[
     "README.md",
     "PRIVACY.md",
     "version.txt",
-    "moon-viewer-install.json",
+    "dragon-viewer-install.json",
 ];
 
 pub struct Workspace {

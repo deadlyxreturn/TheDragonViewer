@@ -5,7 +5,7 @@
 .EXAMPLE
     ./scripts/build-release.ps1 -Tag v0.1.0 -Makensis 'C:\Program Files (x86)\NSIS\makensis.exe'
 .EXAMPLE
-    ./scripts/build-release.ps1 -SkipBuild -Exe target/release/moon-viewer.exe -Out C:\builds\moon-viewer-0.1.0
+    ./scripts/build-release.ps1 -SkipBuild -Exe target/release/dragon-viewer.exe -Out C:\builds\dragon-viewer-0.1.0
 #>
 [CmdletBinding(DefaultParameterSetName = 'Build')]
 param(
@@ -18,7 +18,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $compiler = (Get-Command -Name $Makensis -CommandType Application | Select-Object -First 1).Source
-if (-not $Out) { $Out = Join-Path $repo "target/moon-viewer-dist/$Tag" }
+if (-not $Out) { $Out = Join-Path $repo "target/dragon-viewer-dist/$Tag" }
 $dist = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Out)
 if (Test-Path -LiteralPath $dist) { throw "The release output path already exists: $dist" }
 
@@ -27,13 +27,13 @@ if (-not $SkipBuild) {
     Push-Location -LiteralPath $repo
     try {
         $env:PROTOTYPE_VERSION_TAG = $Tag
-        cargo build --release --locked --target x86_64-pc-windows-msvc --target-dir target -p prototype-viewer --bin moon-viewer --features xr-static-loader
+        cargo build --release --locked --target x86_64-pc-windows-msvc --target-dir target -p prototype-viewer --bin dragon-viewer --features xr-static-loader
         if ($LASTEXITCODE -ne 0) { throw "Cargo failed with exit code $LASTEXITCODE." }
     } finally {
         [Environment]::SetEnvironmentVariable('PROTOTYPE_VERSION_TAG', $oldTag, 'Process')
         Pop-Location
     }
-    $Exe = Join-Path $repo 'target/x86_64-pc-windows-msvc/release/moon-viewer.exe'
+    $Exe = Join-Path $repo 'target/x86_64-pc-windows-msvc/release/dragon-viewer.exe'
 }
 $exePath = (Resolve-Path -LiteralPath $Exe).Path
 # A prebuilt viewer must contain a Windows AMD64 PE header before we run it.
@@ -51,11 +51,11 @@ try {
 & "$PSScriptRoot/verify-version.ps1" -Exe $exePath -Tag $Tag
 
 $version = $Tag.Substring(1)
-$packageName = "Moon-Viewer-$Tag-windows-x64"
+$packageName = "Dragon-Viewer-$Tag-windows-x64"
 $parent = Split-Path $dist -Parent
 New-Item -ItemType Directory -Force -Path $parent | Out-Null
 $parent = (Resolve-Path -LiteralPath $parent).Path
-$stageName = ".moon-viewer-staging-$([Guid]::NewGuid().ToString('N'))"
+$stageName = ".dragon-viewer-staging-$([Guid]::NewGuid().ToString('N'))"
 $stage = Join-Path $parent $stageName
 New-Item -ItemType Directory -Path $stage | Out-Null
 try {
@@ -63,14 +63,14 @@ try {
     New-Item -ItemType Directory -Path $release | Out-Null
     $packageDir = Join-Path $stage $packageName
     $archive = Join-Path $release "$packageName.zip"
-    $setup = Join-Path $release "Moon-Viewer-Setup-$version.exe"
+    $setup = Join-Path $release "Dragon-Viewer-Setup-$version.exe"
     & "$PSScriptRoot/package.ps1" -Exe $exePath -Out $packageDir
     # Windows tar writes ZIP paths with forward slashes, including the package root.
     & tar.exe -a -cf $archive -C $stage $packageName
     if ($LASTEXITCODE -ne 0) { throw "ZIP creation failed with exit code $LASTEXITCODE." }
-    & "$PSScriptRoot/write-update-policy.ps1" -Tag $Tag -Out (Join-Path $release 'moon-viewer-update-policy.json')
+    & "$PSScriptRoot/write-update-policy.ps1" -Tag $Tag -Out (Join-Path $release 'dragon-viewer-update-policy.json')
 
-    $installerScript = Join-Path $repo 'packaging/windows/moon-viewer.nsi'
+    $installerScript = Join-Path $repo 'packaging/windows/dragon-viewer.nsi'
     & $compiler /WX /V2 "/DVERSION=$version" "/DSRC=$packageDir" "/DOUTPUT=$setup" $installerScript
     if ($LASTEXITCODE -ne 0) { throw "NSIS failed with exit code $LASTEXITCODE." }
     foreach ($artifact in Get-Item -LiteralPath $archive, $setup) {

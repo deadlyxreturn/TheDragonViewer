@@ -75,8 +75,8 @@ mod bus {
     use zbus::blocking::Connection;
     use zbus::fdo::{RequestNameFlags, RequestNameReply};
 
-    const PATH: &str = "/org/moon_viewer/MoonViewer";
-    const INTERFACE: &str = "org.moon_viewer.MoonViewer";
+    const PATH: &str = "/org/dragon_viewer/DragonViewer";
+    const INTERFACE: &str = "org.dragon_viewer.DragonViewer";
     /// Past it, the launch starts a viewer of its own with the link.
     const HAND_OFF_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 
@@ -84,7 +84,7 @@ mod bus {
     /// until `release`.
     static OWNER: std::sync::Mutex<Option<(Connection, String)>> = std::sync::Mutex::new(None);
 
-    /// `org.moon_viewer.MoonViewer[.Demo][.T_<title>]`.
+    /// `org.dragon_viewer.DragonViewer[.Demo][.T_<title>]`.
     fn bus_name() -> String {
         name_for(std::env::var_os("PROTOTYPE_DEMO").is_some(), crate::cli::title_slug().as_deref())
     }
@@ -105,7 +105,7 @@ mod bus {
 
     struct Links(Sender<String>);
 
-    #[zbus::interface(name = "org.moon_viewer.MoonViewer")]
+    #[zbus::interface(name = "org.dragon_viewer.DragonViewer")]
     impl Links {
         /// A link of a later launch (the Legacy Viewer's method name).
         /// An error when the viewer no longer reads them (closing): the
@@ -205,10 +205,10 @@ mod tests {
     #[test]
     fn bus_names_are_valid() {
         use super::bus::name_for;
-        assert_eq!(name_for(false, None), "org.moon_viewer.MoonViewer");
+        assert_eq!(name_for(false, None), "org.dragon_viewer.DragonViewer");
         assert_eq!(
             name_for(true, Some("test-linux-slurl")),
-            "org.moon_viewer.MoonViewer.Demo.T_test_linux_slurl"
+            "org.dragon_viewer.DragonViewer.Demo.T_test_linux_slurl"
         );
         // non-ASCII letters of a title, a leading digit, a very long title
         for slug in ["été-2", "9lives", &"a".repeat(400)] {

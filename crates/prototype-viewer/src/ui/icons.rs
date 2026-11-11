@@ -482,67 +482,13 @@ const FILLED: &[(&str, &[u8])] = svg_list!(
 );
 
 /// A simplified mark for small menu buttons, tinted by the active skin.
-const BRAND_SVGS: &[(&str, &[u8])] = &[("moon-brand", include_bytes!("../../../../assets/branding/moon-menu-mark.svg"))];
+const BRAND_SVGS: &[(&str, &[u8])] = &[];
 
 /// Raster images kept as PNG (brand logo).
-/// Moon Viewer's gold icons (cut from its icon sheet) are full-colour: draw
+/// Dragon Viewer's gold icons (cut from its icon sheet) are full-colour: draw
 /// them with a white tint.
 const PNGS: &[(&str, &[u8])] = &[
     ("phoenix_18", include_bytes!("../../assets/icons/phoenix_18.png")),
-    ("moon-conversations", include_bytes!("../../assets/icons/moon/moon-conversations.png")),
-    ("moon-voice", include_bytes!("../../assets/icons/moon/moon-voice.png")),
-    ("moon-people", include_bytes!("../../assets/icons/moon/moon-people.png")),
-    ("moon-inventory", include_bytes!("../../assets/icons/moon/moon-inventory.png")),
-    ("moon-appearance", include_bytes!("../../assets/icons/moon/moon-appearance.png")),
-    ("moon-movement", include_bytes!("../../assets/icons/moon/moon-movement.png")),
-    ("moon-camera", include_bytes!("../../assets/icons/moon/moon-camera.png")),
-    ("moon-worldmap", include_bytes!("../../assets/icons/moon/moon-worldmap.png")),
-    ("moon-minimap", include_bytes!("../../assets/icons/moon/moon-minimap.png")),
-    ("moon-search", include_bytes!("../../assets/icons/moon/moon-search.png")),
-    ("moon-places", include_bytes!("../../assets/icons/moon/moon-places.png")),
-    ("moon-photo", include_bytes!("../../assets/icons/moon/moon-photo.png")),
-    ("moon-gestures", include_bytes!("../../assets/icons/moon/moon-gestures.png")),
-    ("moon-ao", include_bytes!("../../assets/icons/moon/moon-ao.png")),
-    ("moon-preferences", include_bytes!("../../assets/icons/moon/moon-preferences.png")),
-    ("moon-minimize", include_bytes!("../../assets/icons/moon/moon-minimize.png")),
-    ("moon-maximize", include_bytes!("../../assets/icons/moon/moon-maximize.png")),
-    ("moon-close", include_bytes!("../../assets/icons/moon/moon-close.png")),
-    ("moon-send", include_bytes!("../../assets/icons/moon/moon-send.png")),
-    ("moon-emoji", include_bytes!("../../assets/icons/moon/moon-emoji.png")),
-    ("moon-teleport", include_bytes!("../../assets/icons/moon/moon-teleport.png")),
-    ("moon-profile", include_bytes!("../../assets/icons/moon/moon-profile.png")),
-    ("moon-call", include_bytes!("../../assets/icons/moon/moon-call.png")),
-    ("moon-notifications", include_bytes!("../../assets/icons/moon/moon-notifications.png")),
-    ("moon-record", include_bytes!("../../assets/icons/moon/moon-record.png")),
-    ("moon-build", include_bytes!("../../assets/icons/moon/moon-build.png")),
-    ("moon-performance", include_bytes!("../../assets/icons/moon/moon-performance.png")),
-    ("moon-sit", include_bytes!("../../assets/icons/moon/moon-sit.png")),
-    ("moon-fly", include_bytes!("../../assets/icons/moon/moon-fly.png")),
-    ("moon-home", include_bytes!("../../assets/icons/moon/moon-home.png")),
-    ("moon-favorites", include_bytes!("../../assets/icons/moon/moon-favorites.png")),
-    ("moon-aboutland", include_bytes!("../../assets/icons/moon/moon-aboutland.png")),
-    ("moon-teleporthistory", include_bytes!("../../assets/icons/moon/moon-teleporthistory.png")),
-    ("moon-landmark", include_bytes!("../../assets/icons/moon/moon-landmark.png")),
-    ("moon-environments", include_bytes!("../../assets/icons/moon/moon-environments.png")),
-    ("moon-radar", include_bytes!("../../assets/icons/moon/moon-radar.png")),
-    ("moon-beacons", include_bytes!("../../assets/icons/moon/moon-beacons.png")),
-    ("moon-destinations", include_bytes!("../../assets/icons/moon/moon-destinations.png")),
-    ("moon-poser", include_bytes!("../../assets/icons/moon/moon-poser.png")),
-    ("moon-mouselook", include_bytes!("../../assets/icons/moon/moon-mouselook.png")),
-    ("moon-headphones", include_bytes!("../../assets/icons/moon/moon-headphones.png")),
-    ("moon-texturelibrary", include_bytes!("../../assets/icons/moon/moon-texturelibrary.png")),
-    ("moon-webbrowser", include_bytes!("../../assets/icons/moon/moon-webbrowser.png")),
-    ("moon-stopanimations", include_bytes!("../../assets/icons/moon/moon-stopanimations.png")),
-    ("moon-regioninfo", include_bytes!("../../assets/icons/moon/moon-regioninfo.png")),
-    ("moon-statistics", include_bytes!("../../assets/icons/moon/moon-statistics.png")),
-    ("moon-info", include_bytes!("../../assets/icons/moon/moon-info.png")),
-    ("moon-chatlog", include_bytes!("../../assets/icons/moon/moon-chatlog.png")),
-    ("moon-crest", include_bytes!("../../assets/icons/moon/moon-crest.png")),
-    ("moon-crescent", include_bytes!("../../assets/icons/moon/moon-crescent.png")),
-    ("moon-star", include_bytes!("../../assets/icons/moon/moon-star.png")),
-    ("moon-badge", include_bytes!("../../assets/icons/moon/moon-badge.png")),
-    ("moon-menu", include_bytes!("../../assets/icons/moon/moon-menu.png")),
-    ("moon-gem", include_bytes!("../../assets/icons/moon/moon-gem.png")),
 ];
 
 /// Firestorm icon names used by skins / layouts -> Tabler icon.
@@ -833,54 +779,54 @@ pub fn global(name: &str) -> Option<egui::TextureHandle> {
     GLOBAL.read().ok()?.as_ref()?.get(name).cloned()
 }
 
-/// Moon Viewer's generated gold icon standing in for a font-style icon
+/// Dragon Viewer's generated gold icon standing in for a font-style icon
 /// name, wherever the app draws that name.
 pub fn moon_for(name: &str) -> Option<&'static str> {
     Some(match name {
-        "moon-filled" | "moon" | "moon-brand" => "moon-crescent",
-        "messages-filled" | "message-circle-filled" | "Command_Chat_Icon" => "moon-conversations",
-        "microphone-filled" | "microphone" => "moon-voice",
-        "headphones-filled" | "headphones" => "moon-headphones",
-        "users" | "users-group" => "moon-people",
-        "user-filled" | "user" => "moon-profile",
-        "briefcase-filled" | "briefcase" => "moon-inventory",
-        "shirt-filled" | "shirt" => "moon-appearance",
-        "walk" => "moon-movement",
-        "video-filled" | "video" => "moon-camera",
-        "map" | "map-2" => "moon-worldmap",
-        "compass-filled" | "compass" => "moon-minimap",
-        "search-filled" | "search" => "moon-search",
-        "map-pin-filled" | "map-pin" => "moon-places",
-        "camera-filled" | "camera" => "moon-photo",
-        "hand-move" | "hand-stop" => "moon-gestures",
-        "settings-filled" | "settings" => "moon-preferences",
-        "phone-filled" | "phone" => "moon-call",
-        "send-filled" | "send" | "send-2" => "moon-send",
-        "mood-smile-filled" | "mood-smile" => "moon-emoji",
-        "bell-filled" | "bell" => "moon-notifications",
-        "home-filled" | "home" | "Home_Off" => "moon-home",
-        "star-filled" | "star" => "moon-favorites",
-        "eye-filled" | "eye" => "moon-mouselook",
-        "gauge-filled" | "gauge" => "moon-performance",
-        "box" | "cube" => "moon-build",
-        "sunset-2-filled" | "sun-moon" => "moon-environments",
-        "help-circle-filled" | "info-circle-filled" | "info-circle" => "moon-info",
-        "world" | "world-www" => "moon-webbrowser",
-        "chart-bar" => "moon-statistics",
-        "history" | "clock" => "moon-teleporthistory",
-        "radar" | "radar-2" => "moon-radar",
-        "bookmark-filled" | "bookmark" => "moon-landmark",
-        "photo" | "photo-filled" => "moon-texturelibrary",
-        "message-2-filled" | "messages" => "moon-chatlog",
-        "player-record-filled" => "moon-record",
-        "armchair" | "armchair-2" => "moon-sit",
-        "feather" => "moon-fly",
-        "signpost" => "moon-destinations",
+        "dragon-brand" => "dragon-crest",
+        "messages-filled" | "message-circle-filled" | "Command_Chat_Icon" => "dragon-conversations",
+        "microphone-filled" | "microphone" => "dragon-voice",
+        "headphones-filled" | "headphones" => "dragon-headphones",
+        "users" | "users-group" => "dragon-people",
+        "user-filled" | "user" => "dragon-profile",
+        "briefcase-filled" | "briefcase" => "dragon-inventory",
+        "shirt-filled" | "shirt" => "dragon-appearance",
+        "walk" => "dragon-movement",
+        "video-filled" | "video" => "dragon-camera",
+        "map" | "map-2" => "dragon-worldmap",
+        "compass-filled" | "compass" => "dragon-minimap",
+        "search-filled" | "search" => "dragon-search",
+        "map-pin-filled" | "map-pin" => "dragon-places",
+        "camera-filled" | "camera" => "dragon-photo",
+        "hand-move" | "hand-stop" => "dragon-gestures",
+        "settings-filled" | "settings" => "dragon-preferences",
+        "phone-filled" | "phone" => "dragon-call",
+        "send-filled" | "send" | "send-2" => "dragon-send",
+        "mood-smile-filled" | "mood-smile" => "dragon-emoji",
+        "bell-filled" | "bell" => "dragon-notifications",
+        "home-filled" | "home" | "Home_Off" => "dragon-home",
+        "star-filled" | "star" => "dragon-favorites",
+        "eye-filled" | "eye" => "dragon-mouselook",
+        "gauge-filled" | "gauge" => "dragon-performance",
+        "box" | "cube" => "dragon-build",
+        "sunset-2-filled" | "sun-moon" => "dragon-environments",
+        "help-circle-filled" | "info-circle-filled" | "info-circle" => "dragon-info",
+        "world" | "world-www" => "dragon-webbrowser",
+        "chart-bar" => "dragon-statistics",
+        "history" | "clock" => "dragon-teleporthistory",
+        "radar" | "radar-2" => "dragon-radar",
+        "bookmark-filled" | "bookmark" => "dragon-landmark",
+        "photo" | "photo-filled" => "dragon-texturelibrary",
+        "message-2-filled" | "messages" => "dragon-chatlog",
+        "player-record-filled" => "dragon-record",
+        "armchair" | "armchair-2" => "dragon-sit",
+        "feather" => "dragon-fly",
+        "signpost" => "dragon-destinations",
         _ => return None,
     })
 }
 
-/// Draws an icon by name: Moon Viewer's gold icon when it has one (full
+/// Draws an icon by name: Dragon Viewer's gold icon when it has one (full
 /// colour, keeping the tint's opacity), else the named icon tinted.
 /// Returns false when there is neither.
 pub fn draw(painter: &egui::Painter, name: &str, rect: egui::Rect, tint: egui::Color32) -> bool {
@@ -1004,6 +950,14 @@ impl Icons {
         for (alias, target) in ALIASES {
             if let Some(t) = map.get(*target).cloned() {
                 map.insert((*alias).to_owned(), t);
+            }
+        }
+        // Dragon Viewer's skin icons (skin/icons in the repository, or a
+        // `skin/icons` folder beside the exe or in the config folder), full
+        // colour like the art they replace
+        for (name, bytes, svg) in super::dragon_art::icon_files() {
+            if let Some(ci) = super::dragon_art::decode(&bytes, svg, 128) {
+                map.insert(name.clone(), ctx.load_texture(name, ci, opts));
             }
         }
         if let Some(dir) = override_dir

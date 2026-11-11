@@ -123,7 +123,7 @@ pub fn release_notes(version: &str) -> Option<String> {
 /// its English labels).
 pub fn copy_text(sections: &[Section]) -> String {
     let version = prototype_version::version();
-    let mut out = format!("Moon Viewer {version}\n");
+    let mut out = format!("Dragon Viewer {version}\n");
     if let Some(url) = release_notes(version) {
         out.push_str(&format!("Release notes: {url}\n"));
     }
@@ -431,7 +431,7 @@ mod tests {
     fn release_notes_only_for_a_published_version() {
         assert_eq!(
             release_notes("0.7.0").as_deref(),
-            Some("https://github.com/deadlyxreturn/MoonViewer/releases/tag/v0.7.0")
+            Some("https://github.com/deadlyxreturn/TheDragonViewer/releases/tag/v0.7.0")
         );
         assert_eq!(release_notes("0.7.0+3.gabcdef123"), None);
         assert_eq!(release_notes("0.0.0"), None);
@@ -453,7 +453,7 @@ mod tests {
         ];
         let text = copy_text(&sections);
         let blocks: Vec<&str> = text.split("\n\n").collect();
-        assert!(blocks[0].starts_with(&format!("Moon Viewer {}", prototype_version::version())));
+        assert!(blocks[0].starts_with(&format!("Dragon Viewer {}", prototype_version::version())));
         assert_eq!(
             blocks[1],
             format!(

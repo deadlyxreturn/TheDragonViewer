@@ -1,7 +1,7 @@
-<!-- Moon Viewer login screen news (ja). One "##" heading per item, newest first. -->
+<!-- Dragon Viewer login screen news (ja). One "##" heading per item, newest first. -->
 
-# Moon Viewer ニュース
+# Dragon Viewer ニュース
 
-## 2026-11-09 — Moon Viewer へようこそ
-月の宮殿から始まり、設定や会話などのウィンドウをラベンダー色のガラスが彩ります。アバターやオブジェクトは星のきらめきとともに現れます。
-[ソースコードとビルド手順](https://github.com/deadlyxreturn/MoonViewer)
+## 2026-11-11 — Dragon Viewer へようこそ
+金の縁取りの夜色ガラス、オレンジのタブとボタン、オーブのスライダーが、ログイン画面から設定や会話まで続きます。skin フォルダーの画像で自分好みにできます。
+[ソースコードとビルド手順](https://github.com/deadlyxreturn/TheDragonViewer)

@@ -134,6 +134,22 @@ fn volumes(cx: &mut Cx) {
                 ch
             });
         }
+        // Dragon Viewer's orb slider: the master volume in seven steps
+        let master = Custom {
+            path: "audio.volume",
+            modified: |s: &crate::settings::Settings, d: &crate::settings::Settings| s.audio.volume[0] != d.audio.volume[0],
+            reset: |s: &mut crate::settings::Settings, d: &crate::settings::Settings| s.audio.volume[0] = d.audio.volume[0],
+        };
+        cx.wide().row(tr!("dragon-master-level"), tr!("dragon-master-level-hint"), &master, |ui, s| {
+            let mut level = (s.audio.volume[0].clamp(0.0, 1.0) * 6.0).round() as u8;
+            if super::super::orb_strip(ui, &p, &mut level, 7, 40.0, &[]) {
+                s.audio.volume[0] = f32::from(level) / 6.0;
+                s.audio.muted[0] = false;
+                true
+            } else {
+                false
+            }
+        });
         cx.toggle(
             tr!("ui-options-perceptual-volume"),
             tr!("ui-options-perceptual-volume-hint"),

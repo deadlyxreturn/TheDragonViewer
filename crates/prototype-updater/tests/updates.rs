@@ -124,11 +124,11 @@ fn zip(entries: &[(&str, &[u8])]) -> Vec<u8> {
 }
 fn valid_zip() -> Vec<u8> {
     zip(&[
-        ("Moon-Viewer-v0.3.0-windows-x64/moon-viewer.exe", b"new viewer"),
-        ("Moon-Viewer-v0.3.0-windows-x64/assets/character/avatar.llm", b"avatar"),
-        ("Moon-Viewer-v0.3.0-windows-x64/LICENSE", b"license"),
+        ("Dragon-Viewer-v0.3.0-windows-x64/dragon-viewer.exe", b"new viewer"),
+        ("Dragon-Viewer-v0.3.0-windows-x64/assets/character/avatar.llm", b"avatar"),
+        ("Dragon-Viewer-v0.3.0-windows-x64/LICENSE", b"license"),
         (
-            "Moon-Viewer-v0.3.0-windows-x64/moon-viewer-install.json",
+            "Dragon-Viewer-v0.3.0-windows-x64/dragon-viewer-install.json",
             br#"{"schema":1,"version":"0.3.0"}"#,
         ),
     ])
@@ -178,7 +178,7 @@ fn verifies_and_extracts_real_download() {
         |_| {},
     ))
     .expect("verified download");
-    assert_eq!(fs::read(root.join("moon-viewer.exe")).expect("viewer"), b"new viewer");
+    assert_eq!(fs::read(root.join("dragon-viewer.exe")).expect("viewer"), b"new viewer");
 }
 
 #[test]
@@ -230,8 +230,8 @@ fn invalid_zip_paths_and_case_aliases_do_not_escape_staging() {
     for entries in [
         vec![("../escape.txt", b"bad".as_slice())],
         vec![
-            ("Moon-Viewer-v0.3.0-windows-x64/FILE", b"a".as_slice()),
-            ("Moon-Viewer-v0.3.0-windows-x64/file", b"b".as_slice()),
+            ("Dragon-Viewer-v0.3.0-windows-x64/FILE", b"a".as_slice()),
+            ("Dragon-Viewer-v0.3.0-windows-x64/file", b"b".as_slice()),
         ],
     ] {
         let temp = Temp::new();
@@ -245,7 +245,7 @@ fn invalid_zip_paths_and_case_aliases_do_not_escape_staging() {
 
 fn installation(path: &Path, version: &[u8]) {
     fs::create_dir_all(path.join("assets")).expect("assets");
-    fs::write(path.join("moon-viewer.exe"), version).expect("viewer");
+    fs::write(path.join("dragon-viewer.exe"), version).expect("viewer");
     fs::write(path.join("LICENSE"), b"license").expect("license");
 }
 #[test]
@@ -258,15 +258,15 @@ fn new_viewer_failure_restores_old_files_and_preserves_profile() {
     installation(&work.root.join("prepared"), b"new");
     assert!(
         install::apply(&install, &work.root, || {
-            assert_eq!(fs::read(install.join("moon-viewer.exe"))?, b"new");
-            assert_eq!(fs::read(work.root.join("backup/moon-viewer.exe"))?, b"old");
+            assert_eq!(fs::read(install.join("dragon-viewer.exe"))?, b"new");
+            assert_eq!(fs::read(work.root.join("backup/dragon-viewer.exe"))?, b"old");
             anyhow::bail!("new process exited without a frame")
         })
         .is_err()
     );
-    assert_eq!(fs::read(install.join("moon-viewer.exe")).expect("restored"), b"old");
+    assert_eq!(fs::read(install.join("dragon-viewer.exe")).expect("restored"), b"old");
     assert!(
-        work.root.join("failed/moon-viewer.exe").is_file(),
+        work.root.join("failed/dragon-viewer.exe").is_file(),
         "the new package was actually launched then rolled back"
     );
     assert_eq!(fs::read(temp.0.join("settings.json")).expect("profile intact"), b"preferences");
@@ -284,11 +284,11 @@ fn success_removes_backup_only_after_launch_and_refuses_foreign_files_or_concurr
     assert!(install::Workspace::new(&path).is_err());
     installation(&work.root.join("prepared"), b"new");
     install::apply(&path, &work.root, || {
-        assert!(work.root.join("backup/moon-viewer.exe").is_file());
+        assert!(work.root.join("backup/dragon-viewer.exe").is_file());
         Ok(())
     })
     .expect("swap committed");
-    assert_eq!(fs::read(path.join("moon-viewer.exe")).expect("new viewer"), b"new");
+    assert_eq!(fs::read(path.join("dragon-viewer.exe")).expect("new viewer"), b"new");
     assert!(!work.root.join("backup").exists());
 }
 
@@ -553,7 +553,7 @@ fn release_filter_ignores_assets_drafts_prereleases_and_retrieves_minimum_versio
         {"tag_name":"assets-1","html_url":format!("{base}/assets")},
         {"tag_name":"v1.0.0-beta.1","prerelease":true,"html_url":format!("{base}/beta")},
         {"tag_name":"v9.0.0","draft":true,"html_url":format!("{base}/draft")},
-        {"tag_name":"v0.3.0","html_url":format!("{base}/release"),"body":"Real notes","assets":[{"name":"moon-viewer-update-policy.json","size":100,"browser_download_url":format!("{base}/policy")}]},
+        {"tag_name":"v0.3.0","html_url":format!("{base}/release"),"body":"Real notes","assets":[{"name":"dragon-viewer-update-policy.json","size":100,"browser_download_url":format!("{base}/policy")}]},
         {"tag_name":"v0.2.0","html_url":format!("{base}/old")}
     ]).to_string();
     let thread = std::thread::spawn(move || {
@@ -591,7 +591,7 @@ fn the_policy_sets_the_grace_period_below_a_new_minimum() {
         let listener = TcpListener::bind("127.0.0.1:0").expect("loopback");
         let base = format!("http://{}", listener.local_addr().expect("address"));
         let list = serde_json::json!([
-            {"tag_name":"v0.3.0","html_url":format!("{base}/release"),"assets":[{"name":"moon-viewer-update-policy.json","size":100,"browser_download_url":format!("{base}/policy")}]}
+            {"tag_name":"v0.3.0","html_url":format!("{base}/release"),"assets":[{"name":"dragon-viewer-update-policy.json","size":100,"browser_download_url":format!("{base}/policy")}]}
         ])
         .to_string();
         let policy = format!("{{\"schema\":1,\"version\":\"0.3.0\",\"minimum_supported_version\":\"0.3.0\"{grace}}}");

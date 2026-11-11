@@ -25,7 +25,7 @@ use egui::{Color32, RichText, Vec2};
 
 #[derive(Default)]
 pub enum BarAction {
-    /// Moon Viewer's glossy caption buttons and the bar as a title bar (no
+    /// Dragon Viewer's glossy caption buttons and the bar as a title bar (no
     /// Windows title bar in-world with the classic bars).
     Minimize,
     ToggleMaximize,
@@ -2021,20 +2021,23 @@ pub fn top_bars(
                 ui.spacing_mut().item_spacing.x = 4.0;
                 ui.style_mut().visuals.button_frame = false;
                 // The crescent opens the complete, searchable viewer menu.
-                // Moon Viewer's generated gold crescent, full colour
-                let brand = if p.high_contrast { None } else { icons.get("moon-crescent") };
-                let tint = if brand.is_some() { Color32::WHITE } else { p.amber };
-                if let Some(t) = brand.or_else(|| icons.get("moon-brand")) {
-                    let img = egui::Image::new(t).fit_to_exact_size(Vec2::new(20.0, 20.0)).tint(tint);
+                // Dragon Viewer's generated gold crescent, full colour
+                let orb = if p.high_contrast { None } else { super::dragon_art::texture(ui.ctx(), "balls/ball-4") };
+                let tint = if orb.is_some() { Color32::WHITE } else { p.amber };
+                if let Some(t) = orb.as_ref().or_else(|| icons.get("menu-2")) {
+                    let img = egui::Image::new(t).fit_to_exact_size(Vec2::new(24.0, 24.0)).tint(tint);
                     menu::button(ui, p, egui::Button::image(img), |ui| {
                         menu::searchable(ui, p, |ui| main_menus(ui, p, panels, st, &mut action, true));
                     })
                     .on_hover_text(prototype_i18n::tr!("ui-bars-prototype-menu"));
                 }
-                // Moon Viewer's wordmark, as on the login screen
+                // Dragon Viewer's wordmark, as on the login screen
                 if !p.high_contrast && ui.ctx().content_rect().width() >= 1100.0 {
-                    let font = egui::FontId::new(17.0, super::fonts::display_serif(ui.ctx()));
-                    ui.label(RichText::new("MOON VIEWER").font(font).extra_letter_spacing(0.8).color(p.ink));
+                    let font = egui::FontId::new(17.0, super::fonts::display_bold(ui.ctx()));
+                    let mut job = egui::text::LayoutJob::default();
+                    job.append("DRAGON", 0.0, egui::TextFormat { font_id: font.clone(), color: Color32::from_rgb(255, 231, 130), italics: true, ..Default::default() });
+                    job.append(" VIEWER", 0.0, egui::TextFormat { font_id: font, color: Color32::WHITE, italics: true, ..Default::default() });
+                    ui.label(job);
                     ui.add_space(4.0);
                     ui.separator();
                 }
@@ -2115,7 +2118,7 @@ pub fn top_bars(
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.spacing_mut().item_spacing.x = 10.0;
                     ui.add_space(2.0);
-                    // Moon Viewer's glossy minimize, maximize and close at the
+                    // Dragon Viewer's glossy minimize, maximize and close at the
                     // right end, standing in for the Windows title bar's
                     if borderless {
                         ui.spacing_mut().item_spacing.x = 5.0;
@@ -2311,7 +2314,7 @@ pub fn top_bars(
         super::widgets::finish_bar_glass(&painter, slot, bar.response.rect, p);
     }
     if !p.high_contrast {
-        // Moon Viewer: a pearl sheen over the bar and a glowing gold edge
+        // Dragon Viewer: a pearl sheen over the bar and a glowing gold edge
         let r = bar.response.rect;
         let painter = ui.painter();
         let sheen = egui::Rect::from_min_max(r.min, egui::pos2(r.right(), r.center().y));
@@ -2600,49 +2603,49 @@ fn content(ui: &egui::Ui, rect: egui::Rect, look: ButtonLook, text: &str) -> (Op
     (icon_rect, Some((start + lead, room)))
 }
 
-/// Moon Viewer's gold icon for a toolbar command, if it has one.
+/// Dragon Viewer's gold icon for a toolbar command, if it has one.
 fn moon_tool_icon(command: &str) -> Option<&'static str> {
     Some(match command {
-        "conversations" => "moon-conversations",
-        "speak" => "moon-voice",
-        "voice" => "moon-headphones",
-        "record" => "moon-record",
-        "build" => "moon-build",
-        "performance" => "moon-performance",
-        "sit" => "moon-sit",
-        "fly" => "moon-fly",
-        "home" => "moon-home",
-        "favorites" | "wearable_favorites" => "moon-favorites",
-        "aboutland" => "moon-aboutland",
-        "teleport_history" => "moon-teleporthistory",
-        "landmark_here" => "moon-landmark",
-        "myenvironments" => "moon-environments",
-        "radar" => "moon-radar",
-        "beacons" => "moon-beacons",
-        "destinations" => "moon-destinations",
-        "poser" | "pose_stand" => "moon-poser",
-        "mouselook" => "moon-mouselook",
-        "texture_library" => "moon-texturelibrary",
-        "webbrowser" => "moon-webbrowser",
-        "stop_animations" => "moon-stopanimations",
-        "regioninfo" => "moon-regioninfo",
-        "statistics" => "moon-statistics",
-        "howto" => "moon-info",
-        "conversation_log" => "moon-chatlog",
-        "profile" => "moon-profile",
-        "move" => "moon-movement",
-        "view" => "moon-camera",
-        "people" | "friends" => "moon-people",
-        "inventory" => "moon-inventory",
-        "gestures" => "moon-gestures",
-        "appearance" => "moon-appearance",
-        "search" => "moon-search",
-        "places" => "moon-places",
-        "snapshot" => "moon-photo",
-        "worldmap" => "moon-worldmap",
-        "minimap" => "moon-minimap",
-        "preferences" => "moon-preferences",
-        "ao" => "moon-ao",
+        "conversations" => "dragon-conversations",
+        "speak" => "dragon-voice",
+        "voice" => "dragon-headphones",
+        "record" => "dragon-record",
+        "build" => "dragon-build",
+        "performance" => "dragon-performance",
+        "sit" => "dragon-sit",
+        "fly" => "dragon-fly",
+        "home" => "dragon-home",
+        "favorites" | "wearable_favorites" => "dragon-favorites",
+        "aboutland" => "dragon-aboutland",
+        "teleport_history" => "dragon-teleporthistory",
+        "landmark_here" => "dragon-landmark",
+        "myenvironments" => "dragon-environments",
+        "radar" => "dragon-radar",
+        "beacons" => "dragon-beacons",
+        "destinations" => "dragon-destinations",
+        "poser" | "pose_stand" => "dragon-poser",
+        "mouselook" => "dragon-mouselook",
+        "texture_library" => "dragon-texturelibrary",
+        "webbrowser" => "dragon-webbrowser",
+        "stop_animations" => "dragon-stopanimations",
+        "regioninfo" => "dragon-regioninfo",
+        "statistics" => "dragon-statistics",
+        "howto" => "dragon-info",
+        "conversation_log" => "dragon-chatlog",
+        "profile" => "dragon-profile",
+        "move" => "dragon-movement",
+        "view" => "dragon-camera",
+        "people" | "friends" => "dragon-people",
+        "inventory" => "dragon-inventory",
+        "gestures" => "dragon-gestures",
+        "appearance" => "dragon-appearance",
+        "search" => "dragon-search",
+        "places" => "dragon-places",
+        "snapshot" => "dragon-photo",
+        "worldmap" => "dragon-worldmap",
+        "minimap" => "dragon-minimap",
+        "preferences" => "dragon-preferences",
+        "ao" => "dragon-ao",
         _ => return None,
     })
 }
@@ -2676,7 +2679,7 @@ fn tool_button(
     let hovered = ready && !locked && resp.hovered();
     let moon = !p.high_contrast && !look.editing;
     if moon {
-        // Moon Viewer: every button a slim glossy glass pill with a gold
+        // Dragon Viewer: every button a slim glossy glass pill with a gold
         // rim, the active one pink (the concept's bottom bar)
         let face = rect.shrink2(Vec2::new(1.0, 2.0));
         let rr = 6.0;

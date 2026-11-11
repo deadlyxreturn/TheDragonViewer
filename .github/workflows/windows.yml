@@ -17,7 +17,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 75
     env:
-      MOON_BUILD_TAG: ${{ inputs.tag }}
+      DRAGON_BUILD_TAG: ${{ inputs.tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -38,12 +38,12 @@ jobs:
           }
       - name: Build and verify Windows x64 package
         shell: pwsh
-        run: ./scripts/build-release.ps1 -Tag $env:MOON_BUILD_TAG -Out target/moon-windows-release
+        run: ./scripts/build-release.ps1 -Tag $env:DRAGON_BUILD_TAG -Out target/dragon-windows-release
       - name: Upload installer and portable package
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: Moon-Viewer-${{ inputs.tag }}-windows-x64
-          path: target/moon-windows-release/
+          name: Dragon-Viewer-${{ inputs.tag }}-windows-x64
+          path: target/dragon-windows-release/
           if-no-files-found: error
           compression-level: 0
       - name: Publish the release (installer and portable zip)
@@ -51,12 +51,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $files = Get-ChildItem target/moon-windows-release -File | ForEach-Object FullName
-          gh release view $env:MOON_BUILD_TAG -R $env:GITHUB_REPOSITORY *> $null
+          $files = Get-ChildItem target/dragon-windows-release -File | ForEach-Object FullName
+          gh release view $env:DRAGON_BUILD_TAG -R $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:MOON_BUILD_TAG @files --clobber -R $env:GITHUB_REPOSITORY
+            gh release upload $env:DRAGON_BUILD_TAG @files --clobber -R $env:GITHUB_REPOSITORY
           } else {
-            gh release create $env:MOON_BUILD_TAG @files --target $env:GITHUB_SHA --title "Moon Viewer $($env:MOON_BUILD_TAG.Substring(1))" --notes "Moon Viewer for Windows: run Moon-Viewer-Setup to install." -R $env:GITHUB_REPOSITORY
+            gh release create $env:DRAGON_BUILD_TAG @files --target $env:GITHUB_SHA --title "Dragon Viewer $($env:DRAGON_BUILD_TAG.Substring(1))" --notes "Dragon Viewer for Windows: run Dragon-Viewer-Setup to install." -R $env:GITHUB_REPOSITORY
           }
           if ($LASTEXITCODE -ne 0) { throw "gh release failed ($LASTEXITCODE)" }
       - name: Capture login and Preferences screenshots
@@ -64,11 +64,11 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-          $zip = Get-ChildItem target/moon-windows-release -Recurse -Filter 'Moon-Viewer-*-windows-x64.zip' | Select-Object -First 1
+          $zip = Get-ChildItem target/dragon-windows-release -Recurse -Filter 'Dragon-Viewer-*-windows-x64.zip' | Select-Object -First 1
           $tmp = Join-Path $env:RUNNER_TEMP 'moon-portable'
           Expand-Archive -LiteralPath $zip.FullName -DestinationPath $tmp -Force
-          $exe = Get-ChildItem $tmp -Recurse -Filter 'moon-viewer.exe' | Select-Object -First 1
-          $shots = New-Item -ItemType Directory -Force -Path target/moon-screenshots
+          $exe = Get-ChildItem $tmp -Recurse -Filter 'dragon-viewer.exe' | Select-Object -First 1
+          $shots = New-Item -ItemType Directory -Force -Path target/dragon-screenshots
           foreach ($scene in 'Login', 'Preferences') {
             try { ./scripts/capture-moon.ps1 -Exe $exe.FullName -Out $shots.FullName -Scene $scene }
             catch { Write-Warning $_ }
@@ -78,6 +78,6 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: Moon-Viewer-screenshots
-          path: target/moon-screenshots/
+          name: Dragon-Viewer-screenshots
+          path: target/dragon-screenshots/
           if-no-files-found: warn

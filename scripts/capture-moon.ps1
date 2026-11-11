@@ -10,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 $exePath = (Resolve-Path -LiteralPath $Exe).Path
 $output = (Resolve-Path -LiteralPath $Out).Path
 $sceneName = $Scene.ToLowerInvariant()
-$image = Join-Path $output "moon-viewer-$sceneName.png"
+$image = Join-Path $output "dragon-viewer-$sceneName.png"
 $env:PROTOTYPE_DEMO = '1'
 $env:PROTOTYPE_DEMO_POINTER = "$($Width - 32),$($Height - 36)"
 $env:PROTOTYPE_WINDOW_SIZE = "$Width,$Height"
@@ -23,9 +23,9 @@ $env:PROTOTYPE_DEMO_CONV = if ($Scene -eq 'Messenger') { 'prototype:im:1060' } e
 $process = Start-Process -FilePath $exePath -ArgumentList '--language en', "--title Moon-$Scene-Capture", '--fps-limit 60' -WorkingDirectory (Split-Path $exePath) -WindowStyle Hidden -PassThru
 if (-not $process.WaitForExit(150000)) {
     $process.Kill()
-    throw "Moon Viewer timed out during the $Scene capture."
+    throw "Dragon Viewer timed out during the $Scene capture."
 }
 if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $image -PathType Leaf)) {
-    throw "Moon Viewer $Scene capture failed (exit $($process.ExitCode))."
+    throw "Dragon Viewer $Scene capture failed (exit $($process.ExitCode))."
 }
 Get-Item -LiteralPath $image | Select-Object FullName, Length

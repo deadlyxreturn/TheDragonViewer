@@ -812,37 +812,102 @@ fn slider_whole(ui: &mut egui::Ui, v: &mut f32, range: std::ops::RangeInclusive<
 
 /// Stepped slider with a named level shown next to it.
 fn stepped(ui: &mut egui::Ui, p: &Palette, v: &mut u8, labels: &[&str]) -> bool {
-    ui.spacing_mut().slider_width = SLIDER_W - 30.0;
-    let max = labels.len().saturating_sub(1) as u8;
-    let r = ui
-        .scope(|ui| {
-            hide_handle(ui);
-            ui.add(
-                egui::Slider::new(v, 0..=max)
-                    .custom_parser(prototype_i18n::parse_number)
-                    .step_by(1.0)
-                    .trailing_fill(false)
-                    .show_value(false),
-            )
-        })
-        .inner;
-    super::widgets::paint_slider_knob(ui, p, &r, fraction(*v, &(0..=max)));
-    let label = labels.get((*v).min(max) as usize).copied().unwrap_or("");
-    let font = egui::FontId::proportional(12.0);
-    let width = labels
-        .iter()
-        .map(|label| {
-            ui.painter()
-                .layout_no_wrap((*label).to_owned(), font.clone(), p.violet_pale)
-                .size()
-                .x
-        })
-        .fold(0.0, f32::max);
-    ui.add_sized(
-        vec2(width, ui.spacing().interact_size.y),
-        egui::Label::new(RichText::new(label).size(12.0).color(p.violet_pale)).wrap_mode(egui::TextWrapMode::Extend),
-    );
-    r.changed()
+    // Dragon Viewer: a level is picked on a row of orbs
+    let count = labels.len().max(2) as u8;
+    let changed = orb_strip(ui, p, v, count, 20.0, &[]);
+    let label = labels.get((*v).min(count - 1) as usize).copied().unwrap_or("");
+    ui.label(RichText::new(label).size(12.0).color(p.violet_pale));
+    changed
+}
+
+/// Dragon Viewer's orb slider: `count` orbs on a glowing rail, one per
+/// level. A click picks a level: the orbs up to it shine, the chosen one
+/// larger in a blue halo, the others dim. Arrow keys step it.
+pub(super) fn orb_strip(ui: &mut egui::Ui, p: &Palette, value: &mut u8, count: u8, orb: f32, labels: &[&str]) -> bool {
+    let count = count.max(2);
+    let gap = (orb * 0.42).max(6.0);
+    let label_h = if labels.is_empty() { 0.0 } else { 16.0 };
+    let width = count as f32 * orb + (count - 1) as f32 * gap + 8.0;
+    let (rect, mut resp) = ui.allocate_exact_size(vec2(width, orb * 1.25 + label_h), Sense::click_and_drag());
+    let row = Rect::from_min_size(rect.min, vec2(rect.width(), orb * 1.25));
+    let centers: Vec<egui::Pos2> = (0..count)
+        .map(|i| pos2(row.left() + 4.0 + orb * 0.5 + i as f32 * (orb + gap), row.center().y))
+        .collect();
+    let old = *value;
+    if let Some(at) = resp.interact_pointer_pos()
+        && (resp.clicked() || resp.dragged())
+    {
+        let nearest = centers
+            .iter()
+            .enumerate()
+            .min_by(|a, b| (a.1.x - at.x).abs().total_cmp(&(b.1.x - at.x).abs()))
+            .map_or(0, |(i, _)| i as u8);
+        *value = nearest;
+        resp.request_focus();
+    }
+    if resp.has_focus() {
+        ui.input(|i| {
+            if i.key_pressed(egui::Key::ArrowRight) || i.key_pressed(egui::Key::ArrowUp) {
+                *value = (*value + 1).min(count - 1);
+            }
+            if i.key_pressed(egui::Key::ArrowLeft) || i.key_pressed(egui::Key::ArrowDown) {
+                *value = value.saturating_sub(1);
+            }
+        });
+    }
+    *value = (*value).min(count - 1);
+    let chosen = *value as usize;
+    let painter = ui.painter();
+    if p.high_contrast {
+        for (i, c) in centers.iter().enumerate() {
+            let on = i <= chosen;
+            painter.circle_filled(*c, orb * 0.4, if on { p.violet } else { p.field });
+            painter.circle_stroke(*c, orb * 0.4, Stroke::new(if i == chosen { 3.0 } else { 1.0 }, p.ink));
+        }
+    } else {
+        // the rail between the first and the last orb, lit up to the choice
+        let rail = Rect::from_min_max(pos2(centers[0].x, row.center().y - 3.0), pos2(centers[count as usize - 1].x, row.center().y + 3.0));
+        super::widgets::dragon_rail(painter, rail, centers[chosen].x);
+        let hot = resp.hover_pos().map(|at| {
+            centers
+                .iter()
+                .enumerate()
+                .min_by(|a, b| (a.1.x - at.x).abs().total_cmp(&(b.1.x - at.x).abs()))
+                .map_or(0, |(i, _)| i)
+        });
+        for (i, c) in centers.iter().enumerate() {
+            let mut painter = painter.clone();
+            if i > chosen {
+                painter.multiply_opacity(0.55);
+            }
+            let radius = if i == chosen { orb * 0.56 } else { orb * 0.5 };
+            if i == chosen {
+                super::dragon_art::glow(&painter, *c, orb * 0.95, egui::Color32::from_rgb(69, 216, 255), 1.0);
+                painter.circle_stroke(*c, radius + 2.0, Stroke::new(2.0, egui::Color32::from_rgb(255, 247, 161)));
+            } else if hot == Some(i) {
+                super::dragon_art::glow(&painter, *c, orb * 0.75, egui::Color32::from_rgb(255, 139, 32), 0.8);
+            }
+            super::dragon_art::orb(&painter, *c, radius, (i % 7) as u8 + 1);
+        }
+    }
+    if !labels.is_empty() {
+        for (i, c) in centers.iter().enumerate() {
+            if let Some(label) = labels.get(i) {
+                let ink = if i == chosen { p.ink } else { p.muted_dim };
+                let galley = painter.layout_no_wrap((*label).to_owned(), egui::FontId::proportional(11.0), ink);
+                super::widgets::paint_ink_centered(painter, galley, pos2(c.x, rect.bottom() - 7.0), ink);
+            }
+        }
+    }
+    if resp.has_focus() {
+        painter.rect_stroke(rect, 6.0, Stroke::new(1.0, p.ink.gamma_multiply(0.5)), egui::StrokeKind::Inside);
+    }
+    if *value != old {
+        resp.mark_changed();
+    }
+    let label = labels.get(chosen).copied().unwrap_or("");
+    resp.widget_info(|| egui::WidgetInfo::slider(ui.is_enabled(), f64::from(chosen as u8), label));
+    resp.changed()
 }
 
 /// Color swatch opening the compact picker (opaque); `id` tells the
@@ -1572,6 +1637,20 @@ fn body(ui: &mut egui::Ui, p: &Palette, s: &mut Settings, d: &Settings, st: &mut
     );
     let main = Rect::from_min_max(pos2(side.right() + 6.0, full.top()), pos2(full.right() - 11.0, footer.top()));
 
+    // Dragon Viewer: the skin's ornaments, faint, behind the page
+    if !p.high_contrast {
+        let painter = ui.painter();
+        let dragon = Rect::from_min_size(pos2(main.right() - main.width() * 0.78, main.bottom() - 215.0), vec2(main.width() * 0.8, 100.0));
+        super::dragon_art::paint_fill(painter, "gold-dragon", dragon, egui::Color32::from_white_alpha(70));
+        if let Some(t) = super::dragon_art::texture(ui.ctx(), "cloud-scroll") {
+            let [w, h] = t.size();
+            let size = vec2(192.0, 192.0 * h as f32 / w.max(1) as f32);
+            let at = Rect::from_min_size(pos2(main.left() - 9.0, main.bottom() - size.y - 1.0), size);
+            painter.image(t.id(), at, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), egui::Color32::from_white_alpha(87));
+        }
+        let title_flare = Rect::from_center_size(pos2(full.center().x, full.top() + 1.0), vec2(full.width() * 0.7, 26.0));
+        super::dragon_art::paint_fill(painter, "gold-flare", title_flare, egui::Color32::from_white_alpha(200));
+    }
     sidebar(ui, p, s, d, st, r, side, now);
     let searching = !st.query.trim().is_empty();
     let content_rect = page_area(ui, p, s, d, st, r, main, searching, compact);
@@ -1767,6 +1846,28 @@ fn paint_chip(ui: &egui::Ui, p: &Palette, entry: Rect, n: Option<usize>, hit: bo
     let pill = Rect::from_center_size(pos2(entry.right() - 8.0 - w / 2.0, entry.center().y), vec2(w, 17.0));
     ui.painter().rect_filled(pill, ui.visuals().window_corner_radius, face);
     super::widgets::paint_ink_centered(ui.painter(), galley, pill.center(), ink);
+}
+
+/// Dragon Viewer's jewel button: the skin's gold (or red) face and a bold
+/// outlined label.
+pub(crate) fn jewel_button(ui: &mut egui::Ui, p: &Palette, label: &str, size: Vec2, red: bool) -> egui::Response {
+    let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
+    let hot = resp.hovered() || resp.has_focus();
+    if p.high_contrast {
+        let ink = super::widgets::glass_pill(ui.painter(), p, rect, !red, hot);
+        let galley = ui.painter().layout_no_wrap(label.to_owned(), egui::FontId::proportional(15.0), ink);
+        super::widgets::paint_ink_centered(ui.painter(), galley, rect.center(), ink);
+    } else {
+        super::dragon_art::jewel(ui.painter(), rect, red, hot, resp.is_pointer_button_down_on());
+        let (ink, edge) = if red {
+            (egui::Color32::WHITE, egui::Color32::from_rgb(90, 6, 0))
+        } else {
+            (egui::Color32::from_rgb(255, 255, 250), egui::Color32::from_rgb(120, 50, 0))
+        };
+        super::dragon_art::outlined_text(ui.painter(), rect.center(), label, (size.y * 0.5).min(22.0), ink, edge);
+    }
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
+    resp.on_hover_cursor(egui::CursorIcon::PointingHand)
 }
 
 fn pill_button(ui: &mut egui::Ui, p: &Palette, icon: Option<&str>, label: &str, size: Vec2, main: bool) -> egui::Response {
@@ -2085,15 +2186,9 @@ fn footer_bar(
     }
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
         // Changes preview live. Apply commits a new Cancel checkpoint.
-        let size = vec2(88.0, 31.0);
-        let apply = prototype_i18n::tr!("common-apply");
-        if pill_button(ui, p, Some("check"), apply, size, false).on_hover_text(apply).clicked() {
-            st.finish_undo(r);
-            st.opened_with = Some(Box::new(s.clone()));
-            r.save = true;
-        }
+        // Dragon Viewer: the gold OK and the red Cancel jewels at the right
         let cancel = prototype_i18n::tr!("common-cancel");
-        if pill_button(ui, p, Some("x"), cancel, size, false).on_hover_text(cancel).clicked() {
+        if jewel_button(ui, p, cancel, vec2(132.0, 40.0), true).on_hover_text(cancel).clicked() {
             if let Some(before) = st.opened_with.take() {
                 *s = *before;
                 r.changed = true;
@@ -2101,11 +2196,15 @@ fn footer_bar(
             *close = true;
         }
         let ok_label = prototype_i18n::tr!("common-ok");
-        if pill_button(ui, p, Some("moon-filled"), ok_label, size, true)
-            .on_hover_text(ok_label)
-            .clicked()
-        {
+        if jewel_button(ui, p, ok_label, vec2(132.0, 40.0), false).on_hover_text(ok_label).clicked() {
             *close = true;
+        }
+        let size = vec2(88.0, 31.0);
+        let apply = prototype_i18n::tr!("common-apply");
+        if pill_button(ui, p, Some("check"), apply, size, false).on_hover_text(apply).clicked() {
+            st.finish_undo(r);
+            st.opened_with = Some(Box::new(s.clone()));
+            r.save = true;
         }
         ui.add_space(6.0);
         // the hint gives way to the buttons when they leave it no room

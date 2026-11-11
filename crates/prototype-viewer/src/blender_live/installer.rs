@@ -375,7 +375,7 @@ fn remembered() -> Vec<PathBuf> {
 }
 
 fn remembered_paths() -> Option<PathBuf> {
-    directories::ProjectDirs::from("org", "MoonViewer", "MoonViewer").map(|d| d.config_dir().join("blender-installations.json"))
+    directories::ProjectDirs::from("org", "DragonViewer", "DragonViewer").map(|d| d.config_dir().join("blender-installations.json"))
 }
 
 fn remember_selected(executable: &Path) -> Result<(), String> {

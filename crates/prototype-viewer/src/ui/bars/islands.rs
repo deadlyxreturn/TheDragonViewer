@@ -336,7 +336,11 @@ pub fn top(
         menu_options(&resp, p, st, &mut action);
         let open = egui::Popup::is_id_open(ui.ctx(), egui::Popup::default_response_id(&resp));
         slot_face(ui, p, brand, resp.hovered() || open, false);
-        paint_icon(ui, icons, "moon-brand", brand, 18.0, p.amber);
+        if p.high_contrast {
+            paint_icon(ui, icons, "menu-2", brand, 18.0, p.amber);
+        } else {
+            crate::ui::dragon_art::orb(ui.painter(), brand.center(), 11.0, 4);
+        }
         menu::dropdown_placed(
             &resp,
             p,

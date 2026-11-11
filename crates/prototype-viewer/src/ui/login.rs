@@ -26,7 +26,10 @@ pub mod photo_quality_notice;
 pub mod safe_graphics_notice;
 
 /// Prototype's pills: the fields' and buttons' round ends, and their glass edge.
-const PILL_RADIUS: u8 = 26;
+const PILL_RADIUS: u8 = 9;
+
+/// Room between the login card's rim and its fields.
+const CARD_SIDE: f32 = 54.0;
 
 const REMEMBERED_PASSWORD_MASK: &str = "••••••••••••••••";
 /// Second Life's own pages behind the card's links (Prototype).
@@ -131,7 +134,7 @@ pub enum LoginAction {
     Minimize,
     ToggleMaximize,
     /// A press and drag on the empty part of the top bar moves the window
-    /// (Moon Viewer has no Windows title bar on the login screen).
+    /// (Dragon Viewer has no Windows title bar on the login screen).
     DragWindow,
     /// A drag on one of the window's edges or corners resizes it.
     ResizeWindow(winit::window::ResizeDirection),
@@ -229,21 +232,21 @@ fn field(
     let restriction = matches!(id, "login_user" | "new_account_user" | "login_grid").then_some(widgets::TextPolicy::Ascii);
     let id = egui::Id::unique(id);
     let focused = ui.memory(|m| m.has_focus(id));
-    let edge = if focused { p.violet_pale } else { p.amber.gamma_multiply(0.68) };
-    let fill = p.indigo_light.lerp_to_gamma(p.teal, 0.18);
-    let ink = if p.high_contrast { p.ink } else { p.navy };
+    let edge = if focused { Color32::from_rgb(255, 242, 165) } else { p.amber };
+    let ink = p.ink;
+    let icon_tint = if icon == "user-filled" { p.teal } else { p.ink };
     let mut surface = None;
     let response = Frame::new()
         .fill(if p.high_contrast { p.field } else { Color32::TRANSPARENT })
         .stroke(if p.high_contrast { Stroke::new(1.5, edge) } else { Stroke::NONE })
         .corner_radius(PILL_RADIUS) // theme-guard: content — round glass fields
-        .inner_margin(Margin::symmetric(16, 8))
+        .inner_margin(Margin { left: 13, right: 12, top: 6, bottom: 6 })
         .show(ui, |ui| {
             surface = Some((ui.painter().clone(), ui.painter().add(egui::Shape::Noop)));
             ui.horizontal(|ui| {
-                ui.spacing_mut().item_spacing.x = 12.0;
-                let (r, _) = ui.allocate_exact_size(Vec2::splat(19.0), Sense::hover());
-                img(ui, icons, icon, r, ink);
+                ui.spacing_mut().item_spacing.x = 9.0;
+                let (r, _) = ui.allocate_exact_size(Vec2::splat(24.0), Sense::hover());
+                img(ui, icons, icon, r, icon_tint);
                 let eye_w = if password.is_some() { 26.0 } else { 0.0 };
                 let w = ui.available_width() - eye_w;
                 let remembered = password.is_some() && text.is_empty() && hint == REMEMBERED_PASSWORD_MASK;
@@ -260,8 +263,8 @@ fn field(
                                 .inner_margin(crate::ui::widgets::field_text_margin(ui.ctx(), &egui::FontId::proportional(16.0))),
                         )
                         .password(hidden)
-                        .hint_text(RichText::new(hint).color(ink))
-                        .font(egui::FontId::proportional(16.0))
+                        .hint_text(RichText::new(hint).color(ink.gamma_multiply(0.82)))
+                        .font(egui::FontId::proportional(18.0))
                         .text_color(ink)
                         .desired_width(w)
                 });
@@ -289,17 +292,7 @@ fn field(
             .inner
         });
     if let Some((painter, slot)) = surface.filter(|_| !p.high_contrast) {
-        painter.set(
-            slot,
-            moon::polished_pill(
-                ui.ctx(),
-                response.response.rect,
-                fill.lerp_to_gamma(p.ink, 0.52).gamma_multiply(0.74),
-                fill.gamma_multiply(0.50),
-                p.ink,
-                edge.lerp_to_gamma(p.ink, 0.64),
-            ),
-        );
+        painter.set(slot, moon::gold_field(ui.ctx(), response.response.rect, edge, focused));
     }
     response.inner
 }
@@ -561,113 +554,63 @@ fn glass_card<R>(
     response
 }
 
-/// The main glass panel on the login screen.
+/// The main glass panel on the login screen: deep night glass in a gold
+/// rim (the skin's `login-frame` picture instead when it has one).
 fn proto_card<R>(ui: &mut egui::Ui, p: &Palette, body: impl FnOnce(&mut egui::Ui) -> R) -> egui::InnerResponse<R> {
-    let alpha = if p.panel_alpha == 255 {
-        255
-    } else {
-        p.panel_alpha.saturating_sub(105)
-    };
-    let has_trim = !p.high_contrast && super::prototype_art::texture(ui.ctx(), super::prototype_art::Art::Frame).is_some();
-    let rim = if has_trim { Color32::TRANSPARENT } else { p.amber };
     let mut surface = None;
     let response = Frame::new()
-        .fill(Color32::from_rgba_unmultiplied(p.panel.r(), p.panel.g(), p.panel.b(), alpha))
-        .stroke(widgets::border_stroke(p, Stroke::new(2.0, rim)))
-        .corner_radius(57) // theme-guard: content — login frame ornament
-        .shadow(egui::Shadow {
-            offset: [0, 12],
-            blur: 34,
-            spread: 1,
-            color: p.bar.gamma_multiply(0.72),
-        })
-        .inner_margin(Margin { left: 34, right: 34, top: 22, bottom: 54 })
+        .fill(if p.high_contrast { p.panel } else { Color32::TRANSPARENT })
+        .stroke(if p.high_contrast { widgets::border_stroke(p, Stroke::new(2.0, p.amber)) } else { Stroke::NONE })
+        .corner_radius(39) // theme-guard: content — the login card's rim
+        .inner_margin(Margin { left: CARD_SIDE as i8, right: CARD_SIDE as i8, top: 52, bottom: 26 })
         .show(ui, |ui| {
             surface = Some((ui.painter().clone(), ui.painter().add(egui::Shape::Noop)));
             body(ui)
         });
     if let Some((painter, slot)) = surface.filter(|_| !p.high_contrast) {
-        let rect = response.response.rect;
-        let mut shapes = vec![moon::glass_tint(ui.ctx(), rect, p)];
-        if let Some(frame) = moon::frame_art(ui.ctx(), rect) {
-            shapes.push(frame);
-        }
-        painter.set(slot, egui::Shape::Vec(shapes));
+        painter.set(slot, moon::card_face(ui.ctx(), response.response.rect));
     }
     response
 }
 
-/// A pill of frosted glass holding an icon and a menu (grid, start place).
-fn pill_menu(ui: &mut egui::Ui, p: &Palette, icons: &Icons, icon: &str, label: &str, menu: impl FnOnce(&mut egui::Ui) -> egui::Response) {
-    let mut surface = None;
-    let ink = if p.high_contrast { p.ink } else { p.navy };
-    let response = Frame::new()
-        .fill(if p.high_contrast { p.field } else { Color32::TRANSPARENT })
-        .stroke(if p.high_contrast {
-            widgets::border_stroke(p, Stroke::NONE)
-        } else {
-            Stroke::NONE
-        })
-        .corner_radius(PILL_RADIUS) // theme-guard: content — Prototype's pill menus
-        .inner_margin(Margin::symmetric(15, 7))
-        .show(ui, |ui| {
-            surface = Some((ui.painter().clone(), ui.painter().add(egui::Shape::Noop)));
-            ui.horizontal(|ui| {
-                ui.spacing_mut().item_spacing.x = 9.0;
-                let (r, _) = ui.allocate_exact_size(Vec2::splat(17.0), Sense::hover());
-                img(ui, icons, icon, r, ink);
-                let (label_rect, _) = ui.allocate_exact_size(Vec2::new(105.0, 20.0), Sense::hover());
-                let label = ui.painter().layout_no_wrap(label.to_owned(), egui::FontId::proportional(14.0), ink);
-                widgets::paint_ink_left(ui.painter(), label, label_rect.left_center(), ink);
-                // The dropdown still uses the native egui selection and popup.
-                ui.visuals_mut().override_text_color = Some(ink);
-                let w = &mut ui.visuals_mut().widgets;
-                for state in [&mut w.inactive, &mut w.hovered, &mut w.active, &mut w.open] {
-                    state.bg_fill = Color32::TRANSPARENT;
-                    state.weak_bg_fill = Color32::TRANSPARENT;
-                    state.bg_stroke = Stroke::NONE;
-                }
-                let value_surface = ui.painter().add(egui::Shape::Noop);
-                let choice = menu(ui);
-                if !p.high_contrast {
-                    let pearl = p.ink.lerp_to_gamma(p.amber, 0.12);
-                    let tint = if choice.hovered() || choice.has_focus() { 0.67 } else { 0.48 };
-                    ui.painter().set(
-                        value_surface,
-                        moon::polished_pill(
-                            ui.ctx(),
-                            choice.rect,
-                            pearl.gamma_multiply(tint),
-                            pearl.gamma_multiply(0.24),
-                            p.ink,
-                            pearl.gamma_multiply(0.77),
-                        ),
-                    );
-                }
-            });
-        });
-    if let Some((painter, slot)) = surface.filter(|_| !p.high_contrast) {
-        let glass = p.indigo_light.lerp_to_gamma(p.teal, 0.19).gamma_multiply(0.74);
-        painter.set(
-            slot,
-            moon::polished_pill(
-                ui.ctx(),
-                response.response.rect,
-                glass.lerp_to_gamma(p.ink.gamma_multiply(0.83), 0.40),
-                glass,
-                p.ink,
-                p.amber,
-            ),
-        );
-    }
+/// A labelled menu row of the card (Grid, Start Location): the label, then
+/// the menu in a dark field with a gold rim and a gold arrow.
+fn pill_menu(ui: &mut egui::Ui, p: &Palette, _icons: &Icons, _icon: &str, label: &str, menu: impl FnOnce(&mut egui::Ui) -> egui::Response) {
+    ui.horizontal(|ui| {
+        ui.spacing_mut().item_spacing.x = 4.0;
+        let (label_rect, _) = ui.allocate_exact_size(Vec2::new(111.0, 28.0), Sense::hover());
+        let galley = ui.painter().layout_no_wrap(label.to_owned(), egui::FontId::proportional(16.0), p.ink);
+        widgets::paint_ink_left(ui.painter(), galley, label_rect.left_center() + Vec2::new(2.0, 0.0), p.ink);
+        ui.visuals_mut().override_text_color = Some(p.ink);
+        let w = &mut ui.visuals_mut().widgets;
+        for state in [&mut w.inactive, &mut w.hovered, &mut w.active, &mut w.open] {
+            state.bg_fill = Color32::TRANSPARENT;
+            state.weak_bg_fill = Color32::TRANSPARENT;
+            state.bg_stroke = Stroke::NONE;
+        }
+        let value_surface = ui.painter().add(egui::Shape::Noop);
+        let choice = menu(ui);
+        if !p.high_contrast {
+            let hot = choice.hovered() || choice.has_focus();
+            ui.painter().set(value_surface, moon::gold_field(ui.ctx(), choice.rect.expand2(Vec2::new(0.0, 1.0)), if hot { Color32::from_rgb(255, 242, 165) } else { p.amber }, hot));
+        }
+    });
+}
+
+/// The width a `text_link` of `label` takes.
+fn text_link_size(ui: &egui::Ui, p: &Palette, label: &str, _url: &str, _underline: bool) -> f32 {
+    ui.painter()
+        .layout_no_wrap(label.to_owned(), egui::FontId::proportional(14.5), p.ink)
+        .size()
+        .x
 }
 
 /// A plain underlined text link (the card's "Create account" and "Forgot
 /// password?"), lavender-white, brighter while hovered: no button face.
 fn text_link(ui: &mut egui::Ui, p: &Palette, label: &str, url: &str) -> egui::Response {
-    let resp = ui.add(egui::Label::new(RichText::new(label).size(13.5).color(p.ink).underline()).sense(Sense::click()));
+    let resp = ui.add(egui::Label::new(RichText::new(label).size(14.5).color(p.ink)).sense(Sense::click()));
     if resp.hovered() {
-        ui.painter().hline(resp.rect.x_range(), resp.rect.bottom() - 1.0, Stroke::new(1.2, p.amber));
+        ui.painter().hline(resp.rect.x_range(), resp.rect.bottom() - 1.0, Stroke::new(1.2, Color32::from_rgb(255, 230, 134)));
         ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
     }
     if resp.clicked() {
@@ -677,6 +620,7 @@ fn text_link(ui: &mut egui::Ui, p: &Palette, label: &str, url: &str) -> egui::Re
 }
 
 /// A pill of frosted glass with its icon and label (the card's foot).
+#[allow(dead_code)]
 fn pill_button(ui: &mut egui::Ui, p: &Palette, icons: &Icons, icon: &str, label: &str, size: Vec2) -> egui::Response {
     let (r, resp) = ui.allocate_exact_size(size, Sense::click());
     let radius = r.height() * 0.5;
@@ -908,48 +852,36 @@ pub fn show(
     let ctx = ui.ctx().clone();
     let screen = ctx.content_rect();
     let wide = screen.width() >= 1100.0;
-    let card_w = (screen.width() * 0.284).clamp(365.0, 510.0).min(screen.width() - 24.0);
-    let card_x = if wide {
-        screen.width() * 0.072
-    } else {
-        (screen.width() - card_w) * 0.5
-    };
-    let card_y = (screen.height() * 0.116).clamp(64.0, 115.0);
-    let room = (screen.height() - card_y - 113.0).max(190.0);
+    // Dragon Viewer's mockup (1672 × 941): the card at the lower left,
+    // 436 wide, its crest overhanging its top edge
+    let s = (screen.width() / 1672.0).min(screen.height() / 941.0).clamp(0.82, 1.3);
+    let card_w = (436.0 * s).clamp(400.0, 560.0).min(screen.width() - 24.0);
+    let card_x = if wide { 104.0 * s } else { (screen.width() - card_w) * 0.5 };
+    let crest_room = 96.0;
+    let card_y = (359.0 * s)
+        .min(screen.height() - 470.0)
+        .max(44.0 + crest_room);
+    let room = (screen.height() - card_y - 26.0).max(190.0);
     let area = egui::Id::unique("login_area");
-    egui::Area::new(area)
-        .default_size(Vec2::new(card_w, room + 76.0))
+    let card_rect = egui::Area::new(area)
+        .default_size(Vec2::new(card_w, room))
         .fixed_pos(screen.min + Vec2::new(card_x, card_y))
         .show(&ctx, |ui| {
             ui.set_width(card_w);
             proto_card(ui, p, |ui| {
-                let content_width = card_w - 70.0;
+                let content_width = card_w - 2.0 * CARD_SIDE;
                 ui.set_width(content_width);
                 // Area reuses the previous measured height. Let the form
                 // grow again when the viewport grows or a challenge appears.
-                ui.set_max_height(room);
+                ui.set_max_height(room - 40.0);
                 egui::ScrollArea::vertical()
-                    .id_salt("moon_login_form")
-                    .max_height(room)
+                    .id_salt("dragon_login_form")
+                    .max_height(room - 40.0)
                     .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
                     .auto_shrink([false, true])
                     .show(ui, |ui| {
                         ui.set_width(content_width);
                         ui.spacing_mut().item_spacing.y = 6.0;
-                        ui.vertical_centered(|ui| {
-                            let height = (room * 0.31).clamp(86.0, 201.0);
-                            if let Some(art) = super::prototype_art::texture(&ctx, super::prototype_art::Art::Wordmark) {
-                                let [w, h] = art.size();
-                                let size = super::prototype_art::size_at_width(&art, (height * w as f32 / h as f32).min(content_width));
-                                ui.add(egui::Image::new(&art).fit_to_exact_size(size).alt_text("Moon Viewer"));
-                            } else {
-                                ui.add_space((height - 40.0).max(0.0));
-                                ui.label(RichText::new("Moon Viewer").size(32.0).italics().color(p.ink));
-                            }
-                            ui.add_space(12.0);
-                            let (rule, _) = ui.allocate_exact_size(Vec2::new(content_width * 0.91, 24.0), Sense::hover());
-                            moon::divider(ui.painter(), rule, p);
-                        });
                         let enabled = !form.busy && !super::grids::is_open(&ctx);
                         ui.add_enabled_ui(enabled, |ui| {
                             let user = field(
@@ -962,7 +894,7 @@ pub fn show(
                                 &mut settings.username,
                                 None,
                             );
-                            ui.add_space(8.0);
+                            ui.add_space(4.0);
                             // LLPanelLogin::setFields (indra/newview/llpanellogin.cpp,
                             // originally LGPL 2.1): show 16 masked filler characters.
                             // Keep the marker out of the input so login still uses the
@@ -1004,7 +936,7 @@ pub fn show(
                             }
 
                             ui.add_space(6.0);
-                            pill_menu(ui, p, icons, "world-filled", prototype_i18n::tr!("moon-login-grid"), |ui| {
+                            pill_menu(ui, p, icons, "world-filled", prototype_i18n::tr!("dragon-login-grid"), |ui| {
                                 let mut uri = settings.login_uri();
                                 let choice = super::grids::selector(ui, &settings.grids, &mut uri);
                                 settings.grid = crate::login_accounts::grid(&uri);
@@ -1015,7 +947,7 @@ pub fn show(
                             });
                             let key = crate::login_favorites::key(&settings.login_uri(), &settings.username);
                             let mut favorites = StartFavorites::of(&form.favorites, &form.start_favorite, &key);
-                            pill_menu(ui, p, icons, "map-pin-filled", prototype_i18n::tr!("moon-login-start"), |ui| {
+                            pill_menu(ui, p, icons, "map-pin-filled", prototype_i18n::tr!("dragon-login-start"), |ui| {
                                 let width = ui.available_width();
                                 demo_open_start_menu(ui, "start", &favorites);
                                 start_menu(
@@ -1053,17 +985,28 @@ pub fn show(
                                     None,
                                 );
                             }
-                            ui.add_space(13.0);
+                            ui.add_space(2.0);
+                            ui.spacing_mut().item_spacing.y = 2.0;
+                            widgets::checkbox(ui, p, &mut settings.remember_username, prototype_i18n::tr!("dragon-login-remember-username"));
+                            if widgets::checkbox(ui, p, &mut settings.remember_password, prototype_i18n::tr!("dragon-login-remember-password"))
+                                .changed()
+                                && settings.remember_password
+                            {
+                                // a password is remembered with its account's name
+                                settings.remember_username = true;
+                            }
+                            ui.spacing_mut().item_spacing.y = 6.0;
+                            ui.add_space(2.0);
                             let can = form.block_reason.is_none()
                                 && form.tos_message.is_none()
                                 && !settings.login_uri().is_empty()
                                 && (!form.show_mfa || !form.mfa_token.trim().is_empty())
                                 && !settings.username.trim().is_empty()
                                 && (!form.password.is_empty() || form.stored.is_some());
-                            let (r, resp) = ui.allocate_exact_size(
-                                Vec2::new(ui.available_width(), 58.0),
-                                if can { Sense::click() } else { Sense::hover() },
-                            );
+                            // the mockup's LOG IN reaches past the fields on both sides
+                            let (row, _) = ui.allocate_exact_size(Vec2::new(ui.available_width(), 74.0), Sense::hover());
+                            let r = egui::Rect::from_center_size(row.center(), Vec2::new(content_width + 52.0, 66.0));
+                            let resp = ui.interact(r, egui::Id::unique("dragon_log_in"), if can { Sense::click() } else { Sense::hover() });
                             // Requested UX: focus the first missing field, or Connect
                             // when credentials are ready. Firestorm giveFocus otherwise
                             // returns to the user-name field when both are present.
@@ -1076,25 +1019,23 @@ pub fn show(
                                     _ => pass.request_focus(),
                                 }
                             }
-                            let hot = can && resp.hovered();
-                            moon::connect_button(ui.painter(), r, p, can, hot || resp.has_focus());
+                            let hot = can && (resp.hovered() || resp.has_focus());
                             let label = if form.reconnect {
                                 prototype_i18n::tr!("ui-login-reconnect")
                             } else {
                                 prototype_i18n::tr!("ui-login-log-in")
                             };
                             resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, can && enabled, label));
-                            let ink = if p.high_contrast { p.on_accent } else { p.ink };
-                            let family = super::fonts::display_serif(ui.ctx());
-                            let fallback = family == egui::FontFamily::Proportional;
-                            let mut title =
-                                egui::text::LayoutJob::simple_singleline(label.to_owned(), egui::FontId::new(28.0, family), ink);
-                            title.sections[0].format.italics = fallback;
-                            let galley = ui.painter().layout_job(title);
-                            if !p.high_contrast {
-                                super::widgets::paint_ink_centered(ui.painter(), galley.clone(), r.center() + Vec2::new(0.0, 1.5), p.navy);
-                            }
-                            super::widgets::paint_ink_centered(ui.painter(), galley, r.center(), ink);
+                            moon::connect_button(ui.painter(), r, p, can, hot, resp.is_pointer_button_down_on());
+                            let ink = if p.high_contrast { p.on_accent } else { Color32::WHITE };
+                            super::dragon_art::outlined_text(
+                                ui.painter(),
+                                r.center() + Vec2::new(0.0, -1.0),
+                                &label.to_uppercase(),
+                                33.0,
+                                if can { ink } else { ink.gamma_multiply(0.75) },
+                                Color32::from_rgb(63, 28, 14),
+                            );
                             if hot {
                                 ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                             }
@@ -1104,21 +1045,27 @@ pub fn show(
                             if (resp.clicked() || enter) && can && enabled {
                                 action = LoginAction::Login;
                             }
-                            ui.add_space(9.0);
+                            ui.add_space(2.0);
                             ui.horizontal(|ui| {
-                                let (mark, _) = ui.allocate_exact_size(Vec2::splat(17.0), Sense::hover());
-                                img(ui, icons, "user-plus", mark, p.ink);
-                                text_link(ui, p, prototype_i18n::tr!("moon-login-create-account"), REGISTER_URL);
-                                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                let a = text_link_size(ui, p, prototype_i18n::tr!("dragon-login-create-account"), REGISTER_URL, false);
+                                let b = text_link_size(ui, p, prototype_i18n::tr!("ui-login-forgot-password"), FORGOT_PASSWORD_URL, false);
+                                let total = a + b + 34.0;
+                                let x = ui.min_rect().left() + (content_width - total).max(0.0) * 0.5;
+                                let y = ui.cursor().top();
+                                let first = egui::Rect::from_min_size(egui::pos2(x, y), Vec2::new(a, 20.0));
+                                let second = egui::Rect::from_min_size(egui::pos2(x + a + 34.0, y), Vec2::new(b, 20.0));
+                                ui.scope_builder(egui::UiBuilder::new().max_rect(first), |ui| {
+                                    text_link(ui, p, prototype_i18n::tr!("dragon-login-create-account"), REGISTER_URL);
+                                });
+                                ui.painter().vline(
+                                    x + a + 17.0,
+                                    egui::Rangef::new(y + 2.0, y + 18.0),
+                                    Stroke::new(1.0, p.ink.gamma_multiply(0.65)),
+                                );
+                                ui.scope_builder(egui::UiBuilder::new().max_rect(second), |ui| {
                                     text_link(ui, p, prototype_i18n::tr!("ui-login-forgot-password"), FORGOT_PASSWORD_URL);
                                 });
-                            });
-                            ui.horizontal(|ui| {
-                                let mut remember = settings.remember_username && settings.remember_password;
-                                if widgets::checkbox(ui, p, &mut remember, prototype_i18n::tr!("ui-login-remember-me")).changed() {
-                                    settings.remember_username = remember;
-                                    settings.remember_password = remember;
-                                }
+                                ui.allocate_exact_size(Vec2::new(content_width, 20.0), Sense::hover());
                             });
                         });
                         if let Some(reason) = form.block_reason {
@@ -1184,28 +1131,15 @@ pub fn show(
                             ui.add_space(8.0);
                             ui.label(RichText::new(err).size(12.5).color(p.danger));
                         }
-                        ui.add_space(5.0);
-                        Frame::new()
-                            .inner_margin(Margin { left: 11, right: 11, top: 10, bottom: 5 })
-                            .show(ui, |ui| {
-                                let gap = ui.spacing().item_spacing.x;
-                                let w = (ui.available_width() - 2.0 * gap) / 3.0;
-                                ui.horizontal(|ui| {
-                                    let size = Vec2::new(w, 37.0);
-                                    if pill_button(ui, p, icons, "settings-filled", prototype_i18n::tr!("ui-login-settings"), size).clicked() {
-                                        action = LoginAction::Preferences;
-                                    }
-                                    if pill_button(ui, p, icons, "star-filled", prototype_i18n::tr!("moon-login-advanced"), size).clicked() {
-                                        action = LoginAction::Advanced;
-                                    }
-                                    if pill_button(ui, p, icons, "power", prototype_i18n::tr!("ui-login-exit"), size).clicked() {
-                                        action = LoginAction::Quit;
-                                    }
-                                });
-                            });
                     });
-            });
-        });
+            })
+            .response
+            .rect
+        })
+        .inner;
+    if !p.high_contrast {
+        moon::card_ornaments(&ctx, card_rect);
+    }
 
     let chrome_action = chrome::footer(&ctx, p, icons, info, wide, form);
     if !matches!(chrome_action, LoginAction::None) {
