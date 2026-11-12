@@ -266,6 +266,8 @@ impl Theme {
         w.inactive.fg_stroke = Stroke::new(1.0, p.ink);
         w.inactive.corner_radius = br;
 
+        // Dragon Viewer: a button under the pointer glows orange
+        let hot = if p.high_contrast { hot } else { Color32::from_rgb(206, 100, 18) };
         w.hovered.bg_fill = hot;
         w.hovered.weak_bg_fill = hot;
         w.hovered.bg_stroke = Stroke::new(1.4, Color32::from_rgb(255, 230, 150));

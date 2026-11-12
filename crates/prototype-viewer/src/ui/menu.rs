@@ -81,7 +81,8 @@ fn style(p: &Palette) -> egui::style::StyleModifier {
 /// The border of the menus' frames: the raised neutral, or the light one of
 /// high contrast (`widgets::border_stroke`).
 fn frame_border(p: &Palette) -> Color32 {
-    crate::ui::widgets::border_stroke(p, Stroke::new(1.0, p.raised)).color
+    // Dragon Viewer: the menus in a gold rim
+    crate::ui::widgets::border_stroke(p, Stroke::new(1.0, if p.high_contrast { p.raised } else { p.amber })).color
 }
 
 /// The rectangle and corner radius of a stock pop-up frame in `shape`: the
@@ -481,9 +482,15 @@ fn row_lead_sensed(ui: &mut Ui, p: &Palette, lead: Lead, label: &str, enabled: b
     let painter = ui.painter();
     let mut face = p.panel;
     if hot {
-        let wash = p.violet.gamma_multiply(0.35);
-        painter.rect_filled(rect, ui.visuals().window_corner_radius, wash);
-        face = face.blend(wash);
+        if p.high_contrast {
+            let wash = p.violet.gamma_multiply(0.35);
+            painter.rect_filled(rect, ui.visuals().window_corner_radius, wash);
+            face = face.blend(wash);
+        } else {
+            // Dragon Viewer: the hovered row lit like a chosen jewel
+            crate::ui::widgets::glass_pill(painter, p, rect.shrink2(Vec2::new(1.0, 0.5)), true, true);
+            face = Color32::from_rgb(232, 110, 10);
+        }
     }
     let tint = if !enabled {
         p.muted_dim
