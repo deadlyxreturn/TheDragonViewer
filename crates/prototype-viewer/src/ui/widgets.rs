@@ -2048,8 +2048,39 @@ pub(crate) fn moon_window_rim(painter: &egui::Painter, p: &Palette, rect: egui::
         Stroke::new(1.0, Color32::from_white_alpha(90)),
     );
     painter.rect_stroke(rect.shrink(3.0), (radius - 3.0).max(0.0), Stroke::new(6.0, Color32::from_rgba_unmultiplied(255, 140, 20, 26)), egui::StrokeKind::Inside);
+    // a wide diagonal sheen across the glass (the concept's)
+    {
+        let clip = painter.with_clip_rect(rect.shrink(4.0).intersect(painter.clip_rect()));
+        let w = rect.width() * 0.16;
+        let x0 = rect.left() + rect.width() * 0.52;
+        let mut mesh = egui::epaint::Mesh::default();
+        let c = Color32::from_white_alpha(14);
+        for (pos, col) in [
+            (egui::pos2(x0 + rect.height() * 0.6, rect.top()), Color32::TRANSPARENT),
+            (egui::pos2(x0 + rect.height() * 0.6 + w * 0.5, rect.top()), c),
+            (egui::pos2(x0 + rect.height() * 0.6 + w, rect.top()), Color32::TRANSPARENT),
+            (egui::pos2(x0, rect.bottom()), Color32::TRANSPARENT),
+            (egui::pos2(x0 + w * 0.5, rect.bottom()), c),
+            (egui::pos2(x0 + w, rect.bottom()), Color32::TRANSPARENT),
+        ] {
+            mesh.colored_vertex(pos, col);
+        }
+        mesh.add_triangle(0, 1, 3);
+        mesh.add_triangle(1, 4, 3);
+        mesh.add_triangle(1, 2, 4);
+        mesh.add_triangle(2, 5, 4);
+        clip.add(egui::Shape::mesh(mesh));
+    }
     let _ = p;
+    // the concept's blazing edge: a wide orange glow, then the gold rim, and
+    // a few flares of light along it
+    painter.rect_stroke(rect.expand(2.0), radius + 2.0, Stroke::new(10.0, Color32::from_rgba_unmultiplied(255, 110, 0, 46)), egui::StrokeKind::Outside);
     super::dragon_art::gold_rim(painter, rect.shrink(1.5), radius);
+    painter.rect_stroke(rect.shrink(1.0), radius, Stroke::new(1.0, Color32::from_rgb(255, 200, 90)), egui::StrokeKind::Inside);
+    for (x, y) in [(0.21, 0.0), (0.5, 0.0), (0.79, 0.0), (0.27, 1.0), (0.6, 1.0), (0.84, 1.0), (0.0, 0.18), (1.0, 0.8)] {
+        let at = egui::pos2(rect.left() + rect.width() * x, rect.top() + rect.height() * y);
+        super::dragon_art::glow(painter, at, 16.0, Color32::from_rgb(255, 200, 90), 0.9);
+    }
 }
 
 pub(super) fn glass_pill(painter: &egui::Painter, p: &Palette, rect: egui::Rect, selected: bool, hot: bool) -> Color32 {
