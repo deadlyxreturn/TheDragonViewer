@@ -904,10 +904,27 @@ fn entry(ui: &mut egui::Ui, p: &Palette, e: &Entry, rail: bool, id: egui::Id) ->
     let resp = ui.interact(rect, id, sense);
     crate::ui::widgets::reveal_search_selection(ui, &resp, e.current);
     let over = resp.hovered() || (e.close.is_some() && ui.rect_contains_pointer(rect));
-    let ink = crate::ui::widgets::glass_pill(ui.painter(), p, rect, e.current, over || resp.has_focus());
-    if e.current && !p.high_contrast && !rail {
-        crate::ui::widgets::paint_glyph(ui.painter(), "sparkles", rect.left_top() + egui::vec2(12.0, 6.0), 9.0, p.amber);
-    }
+    // Dragon Viewer: a plain list (no box per row); the open conversation
+    // lit by a soft orange band with a gold edge, a faint light under the
+    // pointer
+    let ink = if p.high_contrast {
+        crate::ui::widgets::glass_pill(ui.painter(), p, rect, e.current, over || resp.has_focus())
+    } else {
+        let r = 6.0;
+        if e.current {
+            crate::ui::widgets::gradient_rect(
+                ui.painter(),
+                rect,
+                r,
+                Color32::from_rgba_unmultiplied(255, 150, 30, 120),
+                Color32::from_rgba_unmultiplied(200, 80, 0, 90),
+            );
+            ui.painter().rect_stroke(rect, r, egui::Stroke::new(1.0, Color32::from_rgb(255, 210, 110)), egui::StrokeKind::Inside);
+        } else if over || resp.has_focus() {
+            ui.painter().rect_filled(rect, r, Color32::from_white_alpha(18));
+        }
+        p.ink
+    };
     // The avatar's status dot cuts into the face. Give it the local shade
     // of the selected pill or the smoke glass behind the other entries.
     let mut face = if e.current { p.violet.lerp_to_gamma(p.indigo, 0.38) } else { p.bar };

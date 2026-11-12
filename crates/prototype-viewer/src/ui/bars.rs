@@ -3574,7 +3574,14 @@ pub fn bottom_bar(
                     .iter()
                     .map(|b| natural_width(ui.ctx(), b, style.mode, square, 16.0, square))
                     .collect();
-                let widths = sizing::fit(&natural, style.sizing, labelled, remaining - 1.0, gap, MIN_BTN);
+                // Dragon Viewer's skinned toolbar: every button as wide as its
+                // orb and word (the bar scrolls when they need more room)
+                let skinned = !p.high_contrast && labelled && super::dragon_art::has("toolbar/face");
+                let widths = if skinned {
+                    natural.iter().map(|w| w * 1.16 + 8.0).collect()
+                } else {
+                    sizing::fit(&natural, style.sizing, labelled, remaining - 1.0, gap, MIN_BTN)
+                };
                 let widths: Vec<f32> = widths.into_iter().map(|w| w.max(MIN_BTN)).collect();
                 let used = widths.iter().sum::<f32>() + gap * (n - 1.0);
                 let lead = (sizing::place(style.align, 0.0, remaining - 1.0, used)).max(0.0);
