@@ -10778,10 +10778,17 @@ impl App {
                     std::env::var("PROTOTYPE_REZ_STYLE")
                         .ok()
                         .and_then(|v| v.trim().parse::<u8>().ok())
-                        .filter(|s| (1..=4).contains(s))
-                        .unwrap_or(4)
+                        .filter(|s| (1..=5).contains(s))
+                        .unwrap_or(5)
                 });
-                let colors = if style == 4 {
+                let colors = if style == 5 {
+                    // Dragon Viewer's power-up aura: white-gold core, orange, deep red
+                    [
+                        egui::Color32::from_rgb(255, 236, 140),
+                        egui::Color32::from_rgb(255, 140, 0),
+                        egui::Color32::from_rgb(230, 50, 0),
+                    ]
+                } else if style == 4 {
                     [self.palette.amber, self.palette.indigo_light, self.palette.rose]
                 } else {
                     self.palette.prototype_gradient()

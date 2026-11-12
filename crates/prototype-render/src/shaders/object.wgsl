@@ -1157,6 +1157,8 @@ const REZ_STYLE_GRID: u32 = 1u;
 const REZ_STYLE_SCAN: u32 = 2u;
 const REZ_STYLE_WIRE: u32 = 3u;
 const REZ_STYLE_STARLIGHT: u32 = 4u;
+// Dragon Viewer's power-up aura: rising flames of energy and sparks
+const REZ_STYLE_AURA: u32 = 5u;
 
 // fwidth(world position) of the fragment, taken where the control flow is
 // still uniform (`eval_material`, `fs_glow`): `shade_material` may run
@@ -1225,6 +1227,21 @@ fn rez_starlight(p: vec3<f32>, normal: vec3<f32>, t: f32) -> vec3<f32> {
     return (core * star * 1.65 + color * halo * halo * 0.58) * twinkle * visibility;
 }
 
+// Dragon Viewer's power-up aura: tongues of energy rising over the surface,
+// a blazing outline (`rim`), and sparks drifting up, flickering.
+fn rez_aura(p: vec3<f32>, normal: vec3<f32>, t: f32, rim: f32) -> vec3<f32> {
+    let q = p * 3.0;
+    let rise = q.z - t * 2.4;
+    let wave = sin(q.x * 2.3 + sin(rise * 1.7) * 1.3 + t * 3.0) * sin(q.y * 2.1 - rise * 1.1 + t * 2.0);
+    let tongues = smoothstep(0.2, 0.95, 0.5 + 0.5 * wave) * (0.55 + 0.45 * sin(rise * 3.1 + rez_hash(floor(q)) * 6.2831853));
+    let edge = pow(rim, 1.4);
+    let flicker = 0.82 + 0.18 * sin(t * 23.0 + p.z * 7.0);
+    let flame = rez_gradient(1.0 - clamp(edge + tongues * 0.4, 0.0, 1.0)) * (edge * 1.9 + tongues * 0.5) * flicker;
+    // sparks: the starlight's cells, drifting upward
+    let sparks = rez_starlight(p - vec3<f32>(0.0, 0.0, t * 0.7), normal, t * 2.2) * 0.75;
+    return flame + sparks;
+}
+
 // The look of what is still to come: a dark tint of the surface, lines in
 // the gradient (`g`: where on it), a glowing rim, a soft band of light
 // climbing it and a faint shimmer of its cells.
@@ -1235,6 +1252,10 @@ fn rez_hologram(col: vec3<f32>, in: VsOut, n: vec3<f32>, g: f32, h: f32, t: f32,
     if (style == REZ_STYLE_STARLIGHT) {
         let body = col * 0.08 + tint * 0.045;
         return body + tint * rim * 0.38 + rez_starlight(in.world_pos, in.normal, t);
+    }
+    if (style == REZ_STYLE_AURA) {
+        let body = col * 0.06 + tint * 0.05;
+        return body + rez_aura(in.world_pos, in.normal, t, rim);
     }
     var lines: f32;
     if (style == REZ_STYLE_SCAN) {
@@ -1376,6 +1397,9 @@ fn rez_apply(rec: DrawRecord, in: VsOut, n: vec3<f32>, col: vec3<f32>) -> vec3<f
         if (style == REZ_STYLE_STARLIGHT && tail > 0.01) {
             trail += rez_starlight(in.world_pos, in.normal, elapsed) * tail;
         }
+        if (style == REZ_STYLE_AURA && tail > 0.01) {
+            trail += rez_starlight(in.world_pos - vec3<f32>(0.0, 0.0, elapsed * 0.7), in.normal, elapsed * 2.2) * tail;
+        }
         let core = exp(-pow(above / (band * 0.45), 2.0)) * level;
         let halo = exp(-pow(above / (band * 1.6), 2.0)) * level;
         return base + trail + mix(rez_gradient(0.0), vec3<f32>(1.0), 0.65) * core * 4.0 + rez_gradient(0.15) * halo * 1.4;
@@ -1389,6 +1413,11 @@ fn rez_apply(rec: DrawRecord, in: VsOut, n: vec3<f32>, col: vec3<f32>) -> vec3<f
     var trail = rez_gradient(1.0) * tail * 0.7;
     if (style == REZ_STYLE_STARLIGHT && above < 0.0 && tail > 0.01) {
         trail += rez_starlight(in.world_pos, in.normal, elapsed) * tail * 0.55;
+    }
+    if (style == REZ_STYLE_AURA && above < 0.0 && tail > 0.01) {
+        // the power-up's afterglow: flames and sparks under the rising line
+        let v = normalize(frame.camera_pos.xyz - in.world_pos);
+        trail += rez_aura(in.world_pos, in.normal, elapsed, pow(1.0 - abs(dot(n, v)), 3.0)) * tail * 0.8;
     }
     let revealed = col + trail;
     var c = mix(revealed, holo, smoothstep(-band * 0.5, band * 0.5, above));

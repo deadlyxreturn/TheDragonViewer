@@ -210,6 +210,24 @@ fn gather_orbs(painter: &egui::Painter, screen: Rect, y: f32, k: f32, fraction: 
         Some(f) => f.clamp(0.0, 1.0) * 7.0,
         None => (t * 1.6) % 8.0,
     };
+    // the power-up aura behind the row: a band of energy breathing, and
+    // sparks rising from the bottom of the screen, faster as it loads
+    let power = gathered / 7.0;
+    let band = Rect::from_center_size(Pos2::new(screen.center().x, y), Vec2::new(width + 8.0 * r, r * 5.0));
+    let breathe = 0.7 + 0.3 * (t * 3.0).sin();
+    super::dragon_art::glow(painter, band.center(), width * 0.42, Color32::from_rgb(255, 120, 0), alpha * (0.35 + 0.65 * power) * breathe);
+    let hash = |i: u32, k: f32| ((i as f32 * 12.9898 + k * 78.233).sin() * 43758.547).fract().abs();
+    for i in 0..48u32 {
+        let speed = 40.0 + 90.0 * hash(i, 1.0) + 120.0 * power;
+        let x = screen.left() + screen.width() * (0.2 + 0.6 * hash(i, 2.0)) + (t * 1.7 + i as f32).sin() * 10.0 * k;
+        let travel = screen.height() * 0.55;
+        let rise = (t * speed + hash(i, 3.0) * travel) % travel;
+        let at = Pos2::new(x, screen.bottom() - rise);
+        let life = 1.0 - rise / travel;
+        let size = (1.2 + 2.2 * hash(i, 4.0)) * k;
+        let c = Color32::from_rgb(255, 200, 80).lerp_to_gamma(Color32::from_rgb(255, 90, 0), hash(i, 5.0));
+        painter.circle_filled(at, size, c.gamma_multiply(alpha * life * (0.4 + 0.6 * power)));
+    }
     for i in 0..7 {
         let center = Pos2::new(left + i as f32 * (2.0 * r + gap), y);
         let progress = (gathered - i as f32).clamp(0.0, 1.0);
@@ -218,6 +236,13 @@ fn gather_orbs(painter: &egui::Painter, screen: Rect, y: f32, k: f32, fraction: 
             orb.multiply_opacity(alpha);
             let breathe = 0.85 + 0.15 * (t * 2.0 + i as f32).sin();
             super::dragon_art::glow(&orb, center, r * 1.9, Color32::from_rgb(255, 140, 0), breathe);
+            // its aura: flickering tongues of light rising off it
+            for f in 0..3 {
+                let ph = t * 4.0 + i as f32 * 1.3 + f as f32 * 2.1;
+                let lift = (ph * 0.5).fract();
+                let at = center + Vec2::new((ph * 1.7).sin() * r * 0.35, -r * (0.6 + 1.4 * lift));
+                super::dragon_art::glow(&orb, at, r * (0.9 - 0.5 * lift), Color32::from_rgb(255, 180, 40), 0.8 * (1.0 - lift));
+            }
             super::dragon_art::orb(&orb, center, r, i as u8 + 1);
         } else if progress > 0.0 {
             // the one being gathered: falls from above into place, pulsing
