@@ -2033,11 +2033,7 @@ pub fn top_bars(
                 }
                 // Dragon Viewer's wordmark, as on the login screen
                 if !p.high_contrast && ui.ctx().content_rect().width() >= 1100.0 {
-                    let font = egui::FontId::new(17.0, super::fonts::display_bold(ui.ctx()));
-                    let mut job = egui::text::LayoutJob::default();
-                    job.append("DRAGON", 0.0, egui::TextFormat { font_id: font.clone(), color: Color32::from_rgb(255, 231, 130), italics: true, ..Default::default() });
-                    job.append(" VIEWER", 0.0, egui::TextFormat { font_id: font, color: Color32::WHITE, italics: true, ..Default::default() });
-                    ui.label(job);
+                    super::dragon_art::wordmark(ui, 16.0);
                     ui.add_space(4.0);
                     ui.separator();
                 }

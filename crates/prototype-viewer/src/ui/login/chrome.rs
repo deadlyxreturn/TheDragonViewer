@@ -64,12 +64,7 @@ fn menu_bar(ctx: &Context, p: &Palette, form: &mut LoginForm) -> LoginAction {
                         }
                         super::super::dragon_art::orb(ui.painter(), mark.center(), 13.0, 4);
                         if screen.width() >= 650.0 {
-                            let font = egui::FontId::new(22.0, super::super::fonts::display_bold(ui.ctx()));
-                            let mut job = egui::text::LayoutJob::default();
-                            let gold = egui::Color32::from_rgb(255, 231, 130);
-                            job.append("DRAGON", 0.0, egui::TextFormat { font_id: font.clone(), color: gold, italics: true, ..Default::default() });
-                            job.append(" VIEWER", 0.0, egui::TextFormat { font_id: font, color: egui::Color32::WHITE, italics: true, ..Default::default() });
-                            ui.label(job);
+                            super::super::dragon_art::wordmark(ui, 21.0);
                             ui.add_space(8.0);
                         }
                         ui.separator();

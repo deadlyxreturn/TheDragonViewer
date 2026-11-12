@@ -1892,7 +1892,7 @@ pub(crate) fn jewel_button_face(ui: &mut egui::Ui, p: &Palette, label: &str, siz
         } else {
             (egui::Color32::from_rgb(255, 255, 250), egui::Color32::from_rgb(120, 50, 0))
         };
-        let text = if kind == Jewel::Dark { 15.5 } else { (size.y * 0.5).min(22.0) };
+        let text = if kind == Jewel::Dark || size.x > 140.0 { 15.5 } else { (size.y * 0.5).min(22.0) };
         super::dragon_art::outlined_text(ui.painter(), rect.center(), label, text, ink, edge);
     }
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
@@ -2205,7 +2205,7 @@ fn footer_bar(
     };
     let label = prototype_i18n::tr!("ui-options-reset-everything-2");
     let width = reset_width(&ui, label);
-    let reset_all = jewel_button_face(&mut ui, p, label, vec2(width + 34.0, 40.0), Jewel::Dark)
+    let reset_all = jewel_button_face(&mut ui, p, label, vec2(width + 34.0, 40.0), Jewel::Gold)
         .on_hover_text(prototype_i18n::tr!("ui-options-reset-all-settings"));
     if reset_all.clicked() {
         st.confirm_reset = Some(ResetAsk::All);
@@ -2213,7 +2213,7 @@ fn footer_bar(
     if !searching && !st.modified_view {
         let label = prototype_i18n::tr!("ui-options-reset-page", page = st.page.name());
         let width = reset_width(&ui, &label);
-        let b = jewel_button_face(&mut ui, p, &label, vec2(width + 34.0, 40.0), Jewel::Dark)
+        let b = jewel_button_face(&mut ui, p, &label, vec2(width + 34.0, 40.0), Jewel::Gold)
             .on_hover_text(prototype_i18n::tr!("ui-options-reset-section-help", section = st.page.name()));
         if b.clicked() {
             st.confirm_reset = Some(ResetAsk::Page(st.page));
@@ -2235,7 +2235,7 @@ fn footer_bar(
             *close = true;
         }
         let apply = prototype_i18n::tr!("common-apply");
-        if jewel_button_face(ui, p, apply, vec2(112.0, 40.0), Jewel::Dark).on_hover_text(apply).clicked() {
+        if jewel_button_face(ui, p, apply, vec2(112.0, 40.0), Jewel::Gold).on_hover_text(apply).clicked() {
             st.finish_undo(r);
             st.opened_with = Some(Box::new(s.clone()));
             r.save = true;

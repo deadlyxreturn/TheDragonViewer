@@ -2164,6 +2164,15 @@ pub(super) fn gradient_rect_shape(ctx: &egui::Context, rect: egui::Rect, radius:
 /// A white round knob with a soft shadow and a green ring (the sliders'
 /// and the switch's), larger while `hot`.
 pub fn white_knob(painter: &egui::Painter, p: &Palette, center: egui::Pos2, radius: f32, hot: bool, ring: bool) {
+    // Dragon Viewer: every slider knob an orb (the skin's ball 4)
+    if !p.high_contrast {
+        if hot {
+            super::dragon_art::glow(painter, center, radius * 2.2, Color32::from_rgb(255, 150, 0), 0.9);
+        }
+        super::dragon_art::orb(painter, center, radius + if hot { 4.0 } else { 3.0 }, 4);
+        let _ = ring;
+        return;
+    }
     let r = if hot { radius + 1.0 } else { radius };
     painter.circle_filled(center + Vec2::new(0.0, 1.5), r + 0.5, p.ink.gamma_multiply(0.18));
     if hot {

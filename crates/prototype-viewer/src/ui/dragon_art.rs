@@ -446,3 +446,26 @@ pub fn three_slice(painter: &Painter, name: &str, rect: Rect, tint: Color32) -> 
 pub fn toolbar_label(command: &str) -> Option<&'static str> {
     toolbar_layout().labels.get(command).map(String::as_str)
 }
+
+/// The title bar's wordmark: "DRAGON" in gold and "VIEWER" in white, heavy
+/// italic over a dark edge, with a warm glow behind.
+pub fn wordmark(ui: &mut egui::Ui, size: f32) -> egui::Response {
+    let family = super::fonts::display_bold(ui.ctx());
+    let italic = family == egui::FontFamily::Proportional;
+    let lay = |text: &str, color: Color32| {
+        let mut job = egui::text::LayoutJob::simple_singleline(text.to_owned(), egui::FontId::new(size, family.clone()), color);
+        job.sections[0].format.italics = italic;
+        ui.painter().layout_job(job)
+    };
+    let first = lay("DRAGON", Color32::WHITE);
+    let second = lay(" VIEWER", Color32::WHITE);
+    let w = first.size().x + second.size().x + 6.0;
+    let (rect, resp) = ui.allocate_exact_size(vec2(w, first.size().y.max(size + 4.0)), egui::Sense::hover());
+    let painter = ui.painter();
+    glow(painter, rect.center(), w * 0.45, Color32::from_rgb(255, 120, 0), 0.5);
+    let left = pos2(rect.left() + 3.0 + first.size().x * 0.5, rect.center().y);
+    outlined_text(painter, left, "DRAGON", size, Color32::from_rgb(255, 212, 80), Color32::from_rgb(70, 24, 0));
+    let right = pos2(rect.left() + 3.0 + first.size().x + second.size().x * 0.5, rect.center().y);
+    outlined_text(painter, right, " VIEWER", size, Color32::from_rgb(255, 248, 235), Color32::from_rgb(70, 24, 0));
+    resp
+}
