@@ -914,39 +914,15 @@ fn entry(ui: &mut egui::Ui, p: &Palette, e: &Entry, rail: bool, id: egui::Id) ->
     let resp = ui.interact(rect, id, sense);
     crate::ui::widgets::reveal_search_selection(ui, &resp, e.current);
     let over = resp.hovered() || (e.close.is_some() && ui.rect_contains_pointer(rect));
-    // Dragon Viewer: a plain list (no box per row); the open conversation
-    // lit by a soft orange band with a gold edge, a faint light under the
-    // pointer
     let ink = if p.high_contrast {
         crate::ui::widgets::glass_pill(ui.painter(), p, rect, e.current, over || resp.has_focus())
-    } else if crate::ui::dragon_art::toolbar_face(ui.painter(), rect.expand2(egui::vec2(2.0, 5.0)), e.current, over || resp.has_focus()) {
-        // Dragon Viewer: every conversation on the bottom bar's glossy face,
-        // the open one on its lit face
-        if e.current {
-            ui.painter().rect_stroke(rect.expand(2.0), rect.height() * 0.5, egui::Stroke::new(4.0, Color32::from_rgba_unmultiplied(255, 120, 0, 50)), egui::StrokeKind::Outside);
-        }
-        p.ink
     } else {
-        let r = 6.0;
+        // Dragon Viewer: each conversation a rounded glass bar like the
+        // Preferences' pages, glossy, the open one the lit orange of the
+        // chosen page
+        crate::ui::widgets::glass_pill(ui.painter(), p, rect, e.current, over || resp.has_focus());
         if e.current {
-            // the Preferences' chosen-page glass: blazing orange with the OK
-            // jewel's banding, a bright rim and a glow
-            ui.painter().rect_filled(rect.expand(4.0), r + 4.0, Color32::from_rgba_unmultiplied(255, 120, 0, 70));
-            ui.painter().rect_filled(rect.expand(1.5), r + 1.5, Color32::from_rgb(120, 40, 0));
-            crate::ui::widgets::jewel_glass(
-                ui.painter(),
-                rect,
-                r,
-                [
-                    Color32::from_rgb(255, 236, 140),
-                    Color32::from_rgb(255, 170, 30),
-                    Color32::from_rgb(222, 92, 0),
-                    Color32::from_rgb(255, 156, 34),
-                ],
-            );
-            ui.painter().rect_stroke(rect, r, egui::Stroke::new(1.3, Color32::from_rgb(255, 240, 180)), egui::StrokeKind::Inside);
-        } else if over || resp.has_focus() {
-            ui.painter().rect_filled(rect, r, Color32::from_white_alpha(18));
+            ui.painter().rect_stroke(rect.expand(2.0), 8.0, egui::Stroke::new(4.0, Color32::from_rgba_unmultiplied(255, 120, 0, 50)), egui::StrokeKind::Outside);
         }
         p.ink
     };
