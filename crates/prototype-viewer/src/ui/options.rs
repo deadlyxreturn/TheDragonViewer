@@ -1855,6 +1855,20 @@ fn paint_chip(ui: &egui::Ui, p: &Palette, entry: Rect, n: Option<usize>, hit: bo
 /// Dragon Viewer's jewel button: the skin's gold (or red) face and a bold
 /// outlined label.
 pub(crate) fn jewel_button(ui: &mut egui::Ui, p: &Palette, label: &str, size: Vec2, red: bool) -> egui::Response {
+    jewel_button_face(ui, p, label, size, if red { Jewel::Red } else { Jewel::Gold })
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) enum Jewel {
+    Gold,
+    Red,
+    Dark,
+}
+
+/// A jewel button with the face of `kind`: the gold OK, the red Cancel,
+/// or the dark one (the skin's `button-face`) for the other actions.
+pub(crate) fn jewel_button_face(ui: &mut egui::Ui, p: &Palette, label: &str, size: Vec2, kind: Jewel) -> egui::Response {
+    let red = kind == Jewel::Red;
     let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
     let hot = resp.hovered() || resp.has_focus();
     if p.high_contrast {
@@ -1862,13 +1876,24 @@ pub(crate) fn jewel_button(ui: &mut egui::Ui, p: &Palette, label: &str, size: Ve
         let galley = ui.painter().layout_no_wrap(label.to_owned(), egui::FontId::proportional(15.0), ink);
         super::widgets::paint_ink_centered(ui.painter(), galley, rect.center(), ink);
     } else {
-        super::dragon_art::jewel(ui.painter(), rect, red, hot, resp.is_pointer_button_down_on());
+        let pressed = resp.is_pointer_button_down_on();
+        let dark_drawn = kind == Jewel::Dark
+            && super::dragon_art::paint_fill(ui.painter(), "button-face", rect, if pressed { egui::Color32::from_gray(210) } else { egui::Color32::WHITE });
+        if dark_drawn {
+            if hot {
+                super::dragon_art::glow(ui.painter(), rect.center(), rect.width() * 0.45, egui::Color32::from_rgb(255, 130, 0), 0.6);
+                ui.painter().rect_filled(rect.shrink2(vec2(rect.height() * 0.5, rect.height() * 0.22)), 6.0, egui::Color32::from_white_alpha(22));
+            }
+        } else {
+            super::dragon_art::jewel(ui.painter(), rect, red, hot, pressed);
+        }
         let (ink, edge) = if red {
             (egui::Color32::WHITE, egui::Color32::from_rgb(90, 6, 0))
         } else {
             (egui::Color32::from_rgb(255, 255, 250), egui::Color32::from_rgb(120, 50, 0))
         };
-        super::dragon_art::outlined_text(ui.painter(), rect.center(), label, (size.y * 0.5).min(22.0), ink, edge);
+        let text = if kind == Jewel::Dark { 15.5 } else { (size.y * 0.5).min(22.0) };
+        super::dragon_art::outlined_text(ui.painter(), rect.center(), label, text, ink, edge);
     }
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
     resp.on_hover_cursor(egui::CursorIcon::PointingHand)
@@ -2175,20 +2200,20 @@ fn footer_bar(
     let reset_width = |ui: &egui::Ui, label: &str| {
         let text = ui
             .painter()
-            .layout_no_wrap(label.to_owned(), egui::FontId::proportional(13.0), p.ink);
+            .layout_no_wrap(label.to_owned(), egui::FontId::proportional(15.5), p.ink);
         (text.size().x + 20.0).min((footer.width() - 320.0).max(100.0) * 0.45)
     };
     let label = prototype_i18n::tr!("ui-options-reset-everything-2");
     let width = reset_width(&ui, label);
-    let reset_all =
-        pill_button(&mut ui, p, None, label, vec2(width, 31.0), false).on_hover_text(prototype_i18n::tr!("ui-options-reset-all-settings"));
+    let reset_all = jewel_button_face(&mut ui, p, label, vec2(width + 34.0, 40.0), Jewel::Dark)
+        .on_hover_text(prototype_i18n::tr!("ui-options-reset-all-settings"));
     if reset_all.clicked() {
         st.confirm_reset = Some(ResetAsk::All);
     }
     if !searching && !st.modified_view {
         let label = prototype_i18n::tr!("ui-options-reset-page", page = st.page.name());
         let width = reset_width(&ui, &label);
-        let b = pill_button(&mut ui, p, None, &label, vec2(width, 31.0), false)
+        let b = jewel_button_face(&mut ui, p, &label, vec2(width + 34.0, 40.0), Jewel::Dark)
             .on_hover_text(prototype_i18n::tr!("ui-options-reset-section-help", section = st.page.name()));
         if b.clicked() {
             st.confirm_reset = Some(ResetAsk::Page(st.page));
@@ -2209,9 +2234,8 @@ fn footer_bar(
         if jewel_button(ui, p, ok_label, vec2(132.0, 40.0), false).on_hover_text(ok_label).clicked() {
             *close = true;
         }
-        let size = vec2(88.0, 31.0);
         let apply = prototype_i18n::tr!("common-apply");
-        if pill_button(ui, p, Some("check"), apply, size, false).on_hover_text(apply).clicked() {
+        if jewel_button_face(ui, p, apply, vec2(112.0, 40.0), Jewel::Dark).on_hover_text(apply).clicked() {
             st.finish_undo(r);
             st.opened_with = Some(Box::new(s.clone()));
             r.save = true;

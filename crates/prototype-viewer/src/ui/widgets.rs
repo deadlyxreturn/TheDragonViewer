@@ -2000,15 +2000,7 @@ pub(super) fn glass_pill(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
         painter.rect_stroke(rect, radius, Stroke::new(1.0, p.ink), egui::StrokeKind::Inside);
         return if selected { p.on_accent } else { p.ink };
     }
-    // the skin's own button faces (`button-face`, `button-face-active`),
-    // when it has them
-    let face = if selected { "button-face-active" } else { "button-face" };
-    if super::dragon_art::three_slice(painter, face, rect, if hot { Color32::WHITE } else { Color32::from_gray(232) }) {
-        if hot {
-            painter.rect_filled(rect.expand(3.0), radius + 3.0, Color32::from_rgba_unmultiplied(255, 120, 0, 40));
-        }
-        return if selected { Color32::WHITE } else { p.ink };
-    }
+
     // Dragon Viewer: smoky glass bevels; the chosen one blazing orange
     if selected {
         painter.rect_filled(rect.expand(4.0), radius + 4.0, Color32::from_rgba_unmultiplied(255, 120, 0, if hot { 70 } else { 46 }));
