@@ -94,6 +94,10 @@ fn any_pack_installed(root: &Path) -> bool {
 fn settled(consent: Consent, had_pack: bool) -> Consent {
     match consent {
         Consent::Unasked if had_pack => Consent::Accepted,
+        // Dragon Viewer never stops you with the card: the web and media
+        // support waits for a Download button (Preferences › Sound & Media ›
+        // Media, or where a page or media would show)
+        Consent::Unasked => Consent::Declined,
         other => other,
     }
 }
