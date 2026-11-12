@@ -32,8 +32,8 @@ pub struct Pack {
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
 pub const PACK: Pack = Pack {
     version: "1",
-    size: 252_643_186,
-    sha256: "eb2c9c70bcf87df6d987ad38efca83e38a6f2d934fdbc1d00fceb1d20ea1c93e",
+    size: 252_647_312,
+    sha256: "832f517e285c54af9e0685eef2251dab9da3346ce2df668706a68d39ded40f52",
 };
 #[cfg(target_os = "linux")]
 pub const PACK: Pack = Pack {
