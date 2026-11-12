@@ -919,7 +919,7 @@ fn entry(ui: &mut egui::Ui, p: &Palette, e: &Entry, rail: bool, id: egui::Id) ->
     // pointer
     let ink = if p.high_contrast {
         crate::ui::widgets::glass_pill(ui.painter(), p, rect, e.current, over || resp.has_focus())
-    } else if crate::ui::dragon_art::toolbar_face(ui.painter(), rect, e.current, over || resp.has_focus()) {
+    } else if crate::ui::dragon_art::toolbar_face(ui.painter(), rect.expand2(egui::vec2(2.0, 5.0)), e.current, over || resp.has_focus()) {
         // Dragon Viewer: every conversation on the bottom bar's glossy face,
         // the open one on its lit face
         if e.current {

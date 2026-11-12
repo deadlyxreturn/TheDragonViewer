@@ -2077,9 +2077,12 @@ pub(crate) fn moon_window_rim(painter: &egui::Painter, p: &Palette, rect: egui::
     painter.rect_stroke(rect.expand(2.0), radius + 2.0, Stroke::new(10.0, Color32::from_rgba_unmultiplied(255, 110, 0, 46)), egui::StrokeKind::Outside);
     super::dragon_art::gold_rim(painter, rect.shrink(1.5), radius);
     painter.rect_stroke(rect.shrink(1.0), radius, Stroke::new(1.0, Color32::from_rgb(255, 200, 90)), egui::StrokeKind::Inside);
-    for (x, y) in [(0.21, 0.0), (0.5, 0.0), (0.79, 0.0), (0.27, 1.0), (0.6, 1.0), (0.84, 1.0), (0.0, 0.18), (1.0, 0.8)] {
-        let at = egui::pos2(rect.left() + rect.width() * x, rect.top() + rect.height() * y);
-        super::dragon_art::glow(painter, at, 16.0, Color32::from_rgb(255, 200, 90), 0.9);
+    for (x, y) in [(0.3, 0.0), (0.62, 0.0), (0.45, 1.0), (0.8, 1.0)] {
+        // a streak of light along the rim: a bright core, a soft halo
+        let at = egui::pos2(rect.left() + rect.width() * x, rect.top() + rect.height() * y + if y > 0.5 { -1.0 } else { 1.0 });
+        let streak = egui::Rect::from_center_size(at, egui::vec2(rect.width() * 0.07, 3.0));
+        gradient_rect(painter, streak, 1.5, Color32::from_rgb(255, 245, 210), Color32::from_rgb(255, 190, 80));
+        super::dragon_art::glow(painter, at, 14.0, Color32::from_rgb(255, 170, 60), 0.6);
     }
 }
 
