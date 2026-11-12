@@ -412,3 +412,30 @@ pub fn toolbar_face(painter: &Painter, rect: Rect, active: bool, hot: bool) -> b
     }
     true
 }
+
+/// The skin picture `name` stretched over `rect` in three slices: its
+/// ends (as wide as the picture is high, scaled to the rect's height) kept,
+/// its middle stretched. False when the skin has none.
+pub fn three_slice(painter: &Painter, name: &str, rect: Rect, tint: Color32) -> bool {
+    let Some(t) = texture(painter.ctx(), name) else {
+        return false;
+    };
+    let [w, h] = t.size();
+    let (w, h) = (w as f32, h as f32);
+    let cap_px = (h * 0.5).min(w * 0.5);
+    let cap = (cap_px * rect.height() / h).min(rect.width() * 0.5);
+    let u = cap_px / w;
+    for (r, uv) in [
+        (Rect::from_min_max(rect.min, pos2(rect.left() + cap, rect.bottom())), Rect::from_min_max(pos2(0.0, 0.0), pos2(u, 1.0))),
+        (
+            Rect::from_min_max(pos2(rect.left() + cap, rect.top()), pos2(rect.right() - cap, rect.bottom())),
+            Rect::from_min_max(pos2(u, 0.0), pos2(1.0 - u, 1.0)),
+        ),
+        (Rect::from_min_max(pos2(rect.right() - cap, rect.top()), rect.max), Rect::from_min_max(pos2(1.0 - u, 0.0), pos2(1.0, 1.0))),
+    ] {
+        if r.width() > 0.0 {
+            painter.image(t.id(), r, uv, tint);
+        }
+    }
+    true
+}

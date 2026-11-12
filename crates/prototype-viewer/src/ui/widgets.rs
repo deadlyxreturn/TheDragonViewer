@@ -2000,7 +2000,16 @@ pub(super) fn glass_pill(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
         painter.rect_stroke(rect, radius, Stroke::new(1.0, p.ink), egui::StrokeKind::Inside);
         return if selected { p.on_accent } else { p.ink };
     }
-    // Dragon Viewer: dark slate bevels; the chosen one blazing orange
+    // the skin's own button faces (`button-face`, `button-face-active`),
+    // when it has them
+    let face = if selected { "button-face-active" } else { "button-face" };
+    if super::dragon_art::three_slice(painter, face, rect, if hot { Color32::WHITE } else { Color32::from_gray(232) }) {
+        if hot {
+            painter.rect_filled(rect.expand(3.0), radius + 3.0, Color32::from_rgba_unmultiplied(255, 120, 0, 40));
+        }
+        return if selected { Color32::WHITE } else { p.ink };
+    }
+    // Dragon Viewer: smoky glass bevels; the chosen one blazing orange
     if selected {
         painter.rect_filled(rect.expand(4.0), radius + 4.0, Color32::from_rgba_unmultiplied(255, 120, 0, if hot { 70 } else { 46 }));
         painter.rect_filled(rect.expand(1.5), radius + 1.5, Color32::from_rgb(120, 40, 0));
@@ -2014,13 +2023,19 @@ pub(super) fn glass_pill(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
     painter.rect_filled(rect.expand(3.0), radius + 3.0, Color32::from_rgba_unmultiplied(255, 120, 0, if hot { 60 } else { 18 }));
     painter.rect_filled(rect.expand(1.0), radius + 1.0, Color32::from_rgb(70, 30, 4));
     let (top, bottom) = if hot {
-        (Color32::from_rgba_unmultiplied(120, 72, 52, 240), Color32::from_rgba_unmultiplied(52, 30, 40, 240))
+        (Color32::from_rgba_unmultiplied(140, 84, 60, 190), Color32::from_rgba_unmultiplied(52, 30, 40, 200))
     } else {
-        (Color32::from_rgba_unmultiplied(72, 64, 100, 225), Color32::from_rgba_unmultiplied(24, 20, 44, 225))
+        (Color32::from_rgba_unmultiplied(96, 100, 140, 150), Color32::from_rgba_unmultiplied(20, 18, 40, 175))
     };
     gradient_rect(painter, rect, radius, top, bottom);
-    let shine = egui::Rect::from_min_max(rect.min + egui::vec2(2.0, 1.2), egui::pos2(rect.right() - 2.0, rect.top() + rect.height() * 0.45));
-    gradient_rect(painter, shine, radius, Color32::from_white_alpha(if hot { 50 } else { 32 }), Color32::TRANSPARENT);
+    // glass: a bright reflection over the upper half, a pale line under the rim
+    let shine = egui::Rect::from_min_max(rect.min + egui::vec2(2.0, 1.2), egui::pos2(rect.right() - 2.0, rect.top() + rect.height() * 0.48));
+    gradient_rect(painter, shine, radius, Color32::from_white_alpha(if hot { 80 } else { 60 }), Color32::from_white_alpha(6));
+    painter.hline(
+        (rect.left() + radius)..=(rect.right() - radius),
+        rect.top() + 1.6,
+        Stroke::new(1.0, Color32::from_white_alpha(70)),
+    );
     let rim = if hot { Color32::from_rgb(255, 230, 150) } else { Color32::from_rgb(214, 140, 40) };
     painter.rect_stroke(rect, radius, Stroke::new(1.2, rim), egui::StrokeKind::Inside);
     p.ink
