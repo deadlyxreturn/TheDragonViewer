@@ -363,6 +363,8 @@ pub fn file_bytes(path: &str) -> Option<Vec<u8>> {
 struct ToolbarLayout {
     face_cap_px: f32,
     orbs: HashMap<String, u8>,
+    /// Short English names for the skinned buttons ("Move", "Camera").
+    labels: HashMap<String, String>,
 }
 
 fn toolbar_layout() -> &'static ToolbarLayout {
@@ -438,4 +440,9 @@ pub fn three_slice(painter: &Painter, name: &str, rect: Rect, tint: Color32) -> 
         }
     }
     true
+}
+
+/// The skin's short name for a toolbar command, if it gives one.
+pub fn toolbar_label(command: &str) -> Option<&'static str> {
+    toolbar_layout().labels.get(command).map(String::as_str)
 }

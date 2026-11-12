@@ -311,7 +311,11 @@ pub fn label(button: &ToolButton) -> &str {
             if button.tooltip.is_empty()
                 || prototype_i18n::available_languages().any(|(language, _)| button.tooltip == command.label_in(language)) =>
         {
-            command.label()
+            // Dragon Viewer's skin: its short English names on the buttons
+            match super::dragon_art::toolbar_label(&button.command) {
+                Some(short) if command.label() == command.label_in("en") => short,
+                _ => command.label(),
+            }
         }
         _ => &button.tooltip,
     }

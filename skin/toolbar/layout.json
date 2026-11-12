@@ -17,5 +17,23 @@
     "gestures": 6,
     "ao": 7,
     "preferences": 4
+  },
+  "labels": {
+    "conversations": "Conversations",
+    "speak": "Speak",
+    "people": "People",
+    "inventory": "Inventory",
+    "appearance": "Appearance",
+    "move": "Move",
+    "view": "Camera",
+    "worldmap": "World Map",
+    "minimap": "Mini-map",
+    "search": "Search",
+    "places": "Places",
+    "snapshot": "Photo",
+    "record": "Record",
+    "gestures": "Gestures",
+    "ao": "AO",
+    "preferences": "Preferences"
   }
 }
