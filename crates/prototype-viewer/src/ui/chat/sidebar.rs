@@ -301,10 +301,20 @@ pub(super) fn show(
         ..egui::CornerRadius::ZERO
     };
     ui.painter().rect_filled(column, radius, p.bar.gamma_multiply(0.75));
+    // Dragon Viewer: a glass sheen down the column and a gold divider
+    if !p.high_contrast {
+        crate::ui::widgets::gradient_rect(
+            ui.painter(),
+            egui::Rect::from_min_max(column.min, egui::pos2(column.right(), column.top() + column.height() * 0.4)),
+            0.0,
+            Color32::from_white_alpha(22),
+            Color32::TRANSPARENT,
+        );
+    }
     ui.painter().vline(
         column.right() - 0.5,
         column.y_range(),
-        egui::Stroke::new(1.0, p.ink.gamma_multiply(0.04)),
+        if p.high_contrast { egui::Stroke::new(1.0, p.ink.gamma_multiply(0.04)) } else { egui::Stroke::new(1.0, Color32::from_rgba_unmultiplied(255, 190, 80, 110)) },
     );
     let mut child = ui.new_child(
         egui::UiBuilder::new()

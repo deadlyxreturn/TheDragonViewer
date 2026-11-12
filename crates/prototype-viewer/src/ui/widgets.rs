@@ -2038,9 +2038,16 @@ pub(crate) fn moon_window_rim(painter: &egui::Painter, p: &Palette, rect: egui::
     if p.high_contrast {
         return;
     }
-    // Dragon Viewer: a soft gloss over the title, then the gold rim
-    let gloss = egui::Rect::from_min_max(rect.min + Vec2::new(4.0, 4.0), egui::pos2(rect.right() - 4.0, rect.top() + 40.0_f32.min(rect.height() * 0.3)));
-    gradient_rect(painter, gloss, (radius - 4.0).max(0.0), Color32::from_white_alpha(26), Color32::TRANSPARENT);
+    // Dragon Viewer: glass like Preferences' — a gloss over the top third,
+    // a light line under the rim, a warm glow inside the edge, the gold rim
+    let gloss = egui::Rect::from_min_max(rect.min + Vec2::new(3.0, 3.0), egui::pos2(rect.right() - 3.0, rect.top() + rect.height() * 0.32));
+    gradient_rect(painter, gloss, (radius - 3.0).max(0.0), Color32::from_white_alpha(46), Color32::TRANSPARENT);
+    painter.hline(
+        (rect.left() + radius)..=(rect.right() - radius),
+        rect.top() + 4.0,
+        Stroke::new(1.0, Color32::from_white_alpha(90)),
+    );
+    painter.rect_stroke(rect.shrink(3.0), (radius - 3.0).max(0.0), Stroke::new(6.0, Color32::from_rgba_unmultiplied(255, 140, 20, 26)), egui::StrokeKind::Inside);
     let _ = p;
     super::dragon_art::gold_rim(painter, rect.shrink(1.5), radius);
 }
