@@ -1960,14 +1960,34 @@ pub(crate) fn moon_glass(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
         painter.rect_stroke(rect, radius, Stroke::new(1.0, p.ink), egui::StrokeKind::Inside);
         return;
     }
-    let (top, bottom) = if active {
-        (Color32::from_rgb(255, 196, 70), Color32::from_rgb(232, 92, 0))
+    // Dragon Viewer: glass with the OK jewel's banding (light top, a deep
+    // band through the middle, a lit foot)
+    if hot {
+        painter.rect_filled(rect.expand(3.0), radius + 3.0, Color32::from_rgba_unmultiplied(255, 120, 0, 60));
+    }
+    let stops = if active {
+        [
+            Color32::from_rgb(255, 236, 140),
+            Color32::from_rgb(255, 170, 30),
+            Color32::from_rgb(214, 84, 0),
+            Color32::from_rgb(255, 150, 30),
+        ]
     } else if hot {
-        (Color32::from_rgba_unmultiplied(110, 76, 70, 230), Color32::from_rgba_unmultiplied(48, 34, 52, 230))
+        [
+            Color32::from_rgba_unmultiplied(170, 120, 90, 235),
+            Color32::from_rgba_unmultiplied(110, 60, 40, 235),
+            Color32::from_rgba_unmultiplied(50, 24, 30, 240),
+            Color32::from_rgba_unmultiplied(120, 60, 30, 235),
+        ]
     } else {
-        (Color32::from_rgba_unmultiplied(70, 66, 96, 215), Color32::from_rgba_unmultiplied(26, 24, 46, 215))
+        [
+            Color32::from_rgba_unmultiplied(120, 120, 170, 220),
+            Color32::from_rgba_unmultiplied(60, 56, 100, 225),
+            Color32::from_rgba_unmultiplied(18, 16, 40, 235),
+            Color32::from_rgba_unmultiplied(60, 50, 90, 225),
+        ]
     };
-    gradient_rect(painter, rect, radius, top, bottom);
+    jewel_glass(painter, rect, radius, stops);
     let shine = egui::Rect::from_min_max(
         rect.min + Vec2::new(radius.min(rect.width() * 0.25) * 0.5 + 1.5, 1.5),
         egui::pos2(rect.right() - radius.min(rect.width() * 0.25) * 0.5 - 1.5, rect.top() + rect.height() * 0.48),
@@ -1975,8 +1995,40 @@ pub(crate) fn moon_glass(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
     if shine.is_positive() {
         gradient_rect(painter, shine, (radius - 2.0).max(1.0), Color32::from_white_alpha(if active { 90 } else { 30 }), Color32::TRANSPARENT);
     }
-    let rim = if hot || active { Color32::from_rgb(255, 225, 161) } else { Color32::from_rgba_unmultiplied(255, 190, 70, 120) };
+    let rim = if hot || active { Color32::from_rgb(255, 230, 160) } else { Color32::from_rgb(214, 140, 40) };
     painter.rect_stroke(rect, radius, Stroke::new(1.2, rim), egui::StrokeKind::Inside);
+}
+
+/// The glass of Dragon Viewer's jewels in `rect`: four bands top to bottom
+/// (`stops`: top, upper middle, the deep middle, the foot) and a bright
+/// reflection over the upper half, like the skin's OK button.
+pub(crate) fn jewel_glass(painter: &egui::Painter, rect: egui::Rect, radius: f32, stops: [Color32; 4]) {
+    let h = rect.height();
+    // the rounded face tessellated once, each vertex coloured by its height
+    // along the four bands (top, upper middle at 30 %, the deep band at
+    // 55 %, the foot)
+    let ppp = painter.ctx().pixels_per_point();
+    let mut tess = egui::epaint::Tessellator::new(ppp, egui::epaint::TessellationOptions::default(), [1, 1], Vec::new());
+    let mut mesh = egui::epaint::Mesh::default();
+    tess.tessellate_rect(&egui::epaint::RectShape::filled(rect, radius, Color32::WHITE), &mut mesh); // theme-guard: content — a mask, recoloured below
+    for v in &mut mesh.vertices {
+        let t = ((v.pos.y - rect.top()) / h.max(1.0)).clamp(0.0, 1.0);
+        let c = if t < 0.3 {
+            stops[0].lerp_to_gamma(stops[1], t / 0.3)
+        } else if t < 0.55 {
+            stops[1].lerp_to_gamma(stops[2], (t - 0.3) / 0.25)
+        } else {
+            stops[2].lerp_to_gamma(stops[3], (t - 0.55) / 0.45)
+        };
+        let coverage = v.color.a() as f32 / 255.0;
+        v.color = c.gamma_multiply(coverage);
+    }
+    painter.add(egui::Shape::mesh(mesh));
+    let inset = radius.min(rect.width() * 0.25) * 0.6 + 1.5;
+    let shine = egui::Rect::from_min_max(rect.min + egui::vec2(inset, 1.5), egui::pos2(rect.right() - inset, rect.top() + h * 0.44));
+    if shine.is_positive() {
+        gradient_rect(painter, shine, (shine.height() * 0.5).min(radius), Color32::from_white_alpha(115), Color32::from_white_alpha(8));
+    }
 }
 
 /// A thin gold rim with a pearl inner line and a gloss across the top: the
@@ -2005,10 +2057,13 @@ pub(super) fn glass_pill(painter: &egui::Painter, p: &Palette, rect: egui::Rect,
     if selected {
         painter.rect_filled(rect.expand(4.0), radius + 4.0, Color32::from_rgba_unmultiplied(255, 120, 0, if hot { 70 } else { 46 }));
         painter.rect_filled(rect.expand(1.5), radius + 1.5, Color32::from_rgb(120, 40, 0));
-        gradient_rect(painter, rect, radius, Color32::from_rgb(255, 196, 70), Color32::from_rgb(232, 92, 0));
-        let top = egui::Rect::from_min_max(rect.min + egui::vec2(3.0, 1.5), egui::pos2(rect.right() - 3.0, rect.center().y));
-        gradient_rect(painter, top, radius, Color32::from_white_alpha(90), Color32::TRANSPARENT);
-        painter.rect_stroke(rect, radius, Stroke::new(1.2, Color32::from_rgb(255, 236, 160)), egui::StrokeKind::Inside);
+        jewel_glass(painter, rect, radius, [
+            Color32::from_rgb(255, 236, 140),
+            Color32::from_rgb(255, 170, 30),
+            Color32::from_rgb(214, 84, 0),
+            Color32::from_rgb(255, 150, 30),
+        ]);
+        painter.rect_stroke(rect, radius, Stroke::new(1.3, Color32::from_rgb(255, 240, 180)), egui::StrokeKind::Inside);
         return Color32::WHITE;
     }
     // a dark jewel: deep glass in a gold rim, glowing orange under the pointer
