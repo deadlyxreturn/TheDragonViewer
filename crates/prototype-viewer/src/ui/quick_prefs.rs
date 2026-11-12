@@ -322,17 +322,18 @@ fn label(ui: &mut egui::Ui, p: &Palette, text: &str, tip: &str) {
 fn slot_row(ui: &mut egui::Ui, p: &Palette, settings: &mut Settings, slot: Slot) -> bool {
     fn add<T: egui::emath::Numeric>(ui: &mut egui::Ui, v: &mut T, slot: Slot) -> bool {
         let range = *slot.range().start()..=*slot.range().end();
-        let mut slider = egui::Slider::new(v, T::from_f64(*range.start())..=T::from_f64(*range.end()))
-            .custom_parser(prototype_i18n::parse_number)
-            .suffix(slot.suffix())
-            .trailing_fill(true);
-        if let Some(step) = slot.step() {
-            slider = slider.step_by(step);
-        }
-        if let Some(decimals) = slot.decimals() {
-            slider = slider.fixed_decimals(decimals);
-        }
-        ui.add(slider).changed()
+        let range = T::from_f64(*range.start())..=T::from_f64(*range.end());
+        crate::ui::widgets::star_slider(ui, v, range, false, |mut slider| {
+            slider = slider.custom_parser(prototype_i18n::parse_number).suffix(slot.suffix());
+            if let Some(step) = slot.step() {
+                slider = slider.step_by(step);
+            }
+            if let Some(decimals) = slot.decimals() {
+                slider = slider.fixed_decimals(decimals);
+            }
+            slider
+        })
+        .changed()
     }
     ui.horizontal(|ui| {
         label(ui, p, slot.label(), slot.tip());

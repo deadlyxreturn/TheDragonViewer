@@ -374,12 +374,9 @@ fn quality(cx: &mut Cx) {
             tr!("ui-options-trees-hint"),
             &field!(tree_lod_factor),
             |ui, s| {
-                ui.add(
-                    egui::Slider::new(&mut s.tree_lod_factor, 0.0..=1.0)
-                        .custom_parser(prototype_i18n::parse_number)
-                        .step_by(0.125)
-                        .trailing_fill(true),
-                )
+                crate::ui::widgets::star_slider(ui, &mut s.tree_lod_factor, 0.0..=1.0, false, |sl| {
+                    sl.custom_parser(prototype_i18n::parse_number).step_by(0.125)
+                })
                 .changed()
             },
         );
@@ -775,13 +772,9 @@ fn reflections_and_water(cx: &mut Cx) {
             tr!("ui-options-probe-range-help"),
             &field!(probe_range),
             |ui, s| {
-                ui.add(
-                    egui::Slider::new(&mut s.probe_range, 32.0..=512.0)
-                        .custom_parser(prototype_i18n::parse_number)
-                        .step_by(16.0)
-                        .suffix(" m")
-                        .trailing_fill(true),
-                )
+                crate::ui::widgets::star_slider(ui, &mut s.probe_range, 32.0..=512.0, false, |sl| {
+                    sl.custom_parser(prototype_i18n::parse_number).step_by(16.0).suffix(" m")
+                })
                 .changed()
             },
         );
