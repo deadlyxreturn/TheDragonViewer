@@ -269,6 +269,36 @@ enum Lead<'a> {
 
 /// Paint a fact as a chip from its top left corner; returns its width.
 #[allow(clippy::too_many_arguments)]
+/// The skin's `loading-runner` animation (a GIF; a green background is
+/// keyed out) travelling left to right above the orbs as the region loads,
+/// back and forth while the progress is unknown.
+fn runner(painter: &egui::Painter, screen: Rect, foot: f32, k: f32, fraction: Option<f32>, t: f32, alpha: f32) {
+    let Some(anim) = super::dragon_art::animation(painter.ctx(), "loading-runner") else {
+        return;
+    };
+    let height = (190.0 * k).min(screen.height() * 0.3);
+    let width = height * anim.size.x / anim.size.y.max(1.0);
+    let margin = 40.0 * k;
+    let span = (screen.width() - 2.0 * margin - width).max(0.0);
+    let along = match fraction {
+        Some(f) => f.clamp(0.0, 1.0),
+        None => {
+            let p = (t * 0.12) % 2.0;
+            if p < 1.0 { p } else { 2.0 - p }
+        }
+    };
+    let rect = Rect::from_min_size(Pos2::new(screen.left() + margin + span * along, foot - height), Vec2::new(width, height));
+    // the power-up aura trailing behind and under the runner
+    super::dragon_art::glow(painter, rect.center(), height * 0.6, Color32::from_rgb(255, 150, 0), 0.45 * alpha);
+    painter.image(
+        anim.frame_at(t).id(),
+        rect,
+        Rect::from_min_max(Pos2::new(0.0, 0.0), Pos2::new(1.0, 1.0)),
+        Color32::WHITE.gamma_multiply(alpha),
+    );
+    painter.ctx().request_repaint();
+}
+
 fn chip(painter: &egui::Painter, p: &Palette, at: Pos2, k: f32, lead: Lead, text: &str, alpha: f32, radius: egui::CornerRadius) -> f32 {
     let height = 24.0 * k;
     let pad = 8.0 * k;
@@ -371,6 +401,7 @@ fn banner(
         progress_light(&painter.with_clip_rect(screen), p, fill, k, t, a);
     }
     gather_orbs(painter, screen, track.top() - 70.0 * k, k, fraction, t, a);
+    runner(painter, screen, track.top() - 112.0 * k, k, fraction, t, a);
 
     // bottom right: the region on the world map, and the progress in figures
     let base = track.top() - margin * 0.8;

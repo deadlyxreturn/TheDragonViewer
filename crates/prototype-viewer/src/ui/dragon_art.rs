@@ -470,3 +470,108 @@ pub fn wordmark(ui: &mut egui::Ui, size: f32) -> egui::Response {
     outlined_text(painter, right, " VIEWER", size, Color32::from_rgb(255, 248, 235), Color32::from_rgb(70, 24, 0));
     resp
 }
+
+/// An animated picture from the skin (`<name>.gif`): its frames as
+/// textures and each frame's time on screen. A green-screen background is
+/// keyed out, so a clip filmed or rendered on green shows only its subject.
+pub struct Animation {
+    pub frames: Vec<TextureHandle>,
+    /// seconds each frame stays up
+    pub delays: Vec<f32>,
+    pub size: Vec2,
+}
+
+impl Animation {
+    pub fn total(&self) -> f32 {
+        self.delays.iter().sum::<f32>().max(0.01)
+    }
+
+    /// The frame showing `t` seconds into the loop.
+    pub fn frame_at(&self, t: f32) -> &TextureHandle {
+        let mut left = t.rem_euclid(self.total());
+        for (i, d) in self.delays.iter().enumerate() {
+            if left < *d {
+                return &self.frames[i];
+            }
+            left -= d;
+        }
+        &self.frames[self.frames.len() - 1]
+    }
+}
+
+/// Makes green-screen pixels see-through, softens the edge and takes the
+/// green tint off the subject's outline.
+fn key_green(img: &mut image::RgbaImage) {
+    for px in img.pixels_mut() {
+        let [r, g, b, a] = px.0;
+        let (rf, gf, bf) = (r as f32, g as f32, b as f32);
+        let other = rf.max(bf);
+        let excess = gf - other;
+        if excess > 18.0 && gf > 60.0 {
+            // 18..70 of excess green fades from solid to clear
+            let keep = (1.0 - (excess - 18.0) / 52.0).clamp(0.0, 1.0);
+            let alpha = (a as f32 * keep) as u8;
+            // spill: pull the green down to the brighter of red and blue
+            px.0 = [r, other.min(gf) as u8, b, alpha];
+        } else if excess > 0.0 {
+            px.0 = [r, other as u8, b, a];
+        }
+    }
+}
+
+/// The skin's animation called `name` (`<name>.gif`), decoded in the
+/// background; None until it is ready, or when the skin has none.
+pub fn animation(ctx: &Context, name: &str) -> Option<Arc<Animation>> {
+    enum A {
+        Loading,
+        Ready(Option<Arc<Animation>>),
+    }
+    static TABLE: OnceLock<Mutex<HashMap<String, A>>> = OnceLock::new();
+    let table = TABLE.get_or_init(Default::default);
+    let mut t = table.lock().ok()?;
+    match t.get(name) {
+        Some(A::Ready(a)) => return a.clone(),
+        Some(A::Loading) => return None,
+        None => {}
+    }
+    t.insert(name.to_owned(), A::Loading);
+    let (ctx, name) = (ctx.clone(), name.to_owned());
+    std::thread::spawn(move || {
+        let anim = decode_animation(&ctx, &name);
+        if anim.is_none() {
+            log::info!("skin: no animation {name}.gif");
+        }
+        if let Ok(mut t) = table.lock() {
+            t.insert(name, A::Ready(anim.map(Arc::new)));
+        }
+        ctx.request_repaint();
+    });
+    None
+}
+
+fn decode_animation(ctx: &Context, name: &str) -> Option<Animation> {
+    use image::AnimationDecoder;
+    let bytes = file_bytes(&format!("{name}.gif"))?;
+    let decoder = image::codecs::gif::GifDecoder::new(std::io::Cursor::new(bytes)).ok()?;
+    let mut frames = Vec::new();
+    let mut delays = Vec::new();
+    let mut size = Vec2::ZERO;
+    // a long clip is cut at 240 frames, and a big one scaled to 360 px tall,
+    // to keep its memory small
+    for (i, frame) in decoder.into_frames().take(240).enumerate() {
+        let frame = frame.ok()?;
+        let (num, den) = frame.delay().numer_denom_ms();
+        let ms = if den == 0 { 0.0 } else { num as f32 / den as f32 };
+        let mut img = frame.into_buffer();
+        if img.height() > 360 {
+            let w = (img.width() as f32 * 360.0 / img.height() as f32).round().max(1.0) as u32;
+            img = image::imageops::resize(&img, w, 360, image::imageops::FilterType::Triangle);
+        }
+        key_green(&mut img);
+        size = vec2(img.width() as f32, img.height() as f32);
+        let color = egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw());
+        frames.push(ctx.load_texture(format!("dragon_anim_{name}_{i}"), color, TextureOptions::LINEAR));
+        delays.push(if ms < 20.0 { 0.066 } else { ms / 1000.0 });
+    }
+    (!frames.is_empty()).then_some(Animation { frames, delays, size })
+}
