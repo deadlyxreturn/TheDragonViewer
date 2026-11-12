@@ -18,3 +18,4 @@ To try pictures without building, put them in a `skin` folder next to `dragon-vi
 | `balls/ball-1` … `ball-7` | 256 × 256 | The orbs: orb slider, slider knobs, title orbs, LOG IN ends |
 | `messenger-bg.png` | 1600 × 1000 | Behind the messenger's glass |
 | `icons/dragon-*.png` | 256 × 256 | Toolbar, messenger and window icons (see the icon list) |
+| `app-icon.png` | 1024 × 1024 | The app icon: desktop shortcut, taskbar, installer (made into the .ico at build time) |

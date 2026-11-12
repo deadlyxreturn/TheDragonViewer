@@ -36,6 +36,17 @@ jobs:
             }
             $nsis >> $env:GITHUB_PATH
           }
+      # the skin's own app icon (skin/app-icon.png): the exe's, the
+      # installer's and the window's icon, made from it
+      - name: Use the skin's app icon
+        shell: pwsh
+        run: |
+          if (Test-Path skin/app-icon.png) {
+            python -m pip install --quiet pillow
+            python -c "from PIL import Image; im = Image.open('skin/app-icon.png').convert('RGBA'); im.thumbnail((256, 256)); c = Image.new('RGBA', (256, 256)); c.paste(im, ((256 - im.width) // 2, (256 - im.height) // 2)); c.save('assets/branding/dragon-viewer.ico', sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]); c.save('assets/branding/dragon-viewer-icon.png')"
+            if ($LASTEXITCODE -ne 0) { throw 'App icon conversion failed.' }
+            'App icon taken from skin/app-icon.png'
+          }
       - name: Build and verify Windows x64 package
         shell: pwsh
         run: ./scripts/build-release.ps1 -Tag $env:DRAGON_BUILD_TAG -Out target/dragon-windows-release
