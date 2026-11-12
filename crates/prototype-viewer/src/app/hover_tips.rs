@@ -193,6 +193,7 @@ impl App {
 
     /// ParcelProperties of the hovered parcel.
     pub(super) fn on_hover_parcel(&mut self, handle: prototype_net::RegionHandle, parcel: std::sync::Arc<prototype_net::ParcelInfo>) {
+        self.world.note_seen_parcel(handle, parcel.clone());
         self.hover_tips.parcels.on_parcel(handle, parcel);
     }
 }

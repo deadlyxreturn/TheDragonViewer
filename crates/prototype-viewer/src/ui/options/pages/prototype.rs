@@ -6,7 +6,7 @@
 
 use super::super::cx::{Cx, F, field};
 use crate::build::MoveHologram;
-use crate::settings::{ChatStyle, NotificationsStyle, PhotoWindowStyle, Settings, WorldMapStyle};
+use crate::settings::{ChatStyle, DestinationsStyle, NotificationsStyle, PhotoWindowStyle, Settings, WorldMapStyle};
 use crate::theme::Palette;
 use crate::world::lookat::{Aim, Style};
 use egui::epaint::{Mesh, Vertex, WHITE_UV};
@@ -53,6 +53,11 @@ pub fn set_all(s: &mut Settings, look: Look) {
     s.classic_outfit_gallery = !prototype;
     s.build.legacy_window = !prototype;
     s.classic_places = !prototype;
+    s.destinations_style = if prototype {
+        DestinationsStyle::Prototype
+    } else {
+        DestinationsStyle::Legacy
+    };
     s.classic_pay_window = !prototype;
     s.legacy_money_tracker = !prototype;
     s.classic_controls = !prototype;
@@ -190,6 +195,15 @@ pub fn page(cx: &mut Cx, tab: usize) {
                 tr!("ui-options-prototype-places-prototype"),
                 tr!("ui-options-prototype-places-classic"),
                 &field!(classic_places),
+            );
+            cx.wide().choice(
+                tr!("ui-options-prototype-destinations"),
+                tr!("ui-options-prototype-destinations-help"),
+                &field!(destinations_style),
+                &[
+                    (DestinationsStyle::Prototype, tr!("ui-options-prototype-destinations-prototype"), true),
+                    (DestinationsStyle::Legacy, tr!("ui-options-prototype-destinations-classic"), false),
+                ],
             );
             look(
                 cx,
@@ -525,6 +539,7 @@ mod tests {
         assert!(s.classic_outfit_gallery, "the Legacy Viewer's small outfit tiles");
         assert!(s.build.legacy_window, "the Legacy Viewer's build tools and tabs");
         assert!(s.classic_places, "Places opens the Legacy Viewer's three tabs");
+        assert_eq!(s.destinations_style, DestinationsStyle::Legacy, "the guide's web page");
         assert!(s.classic_pay_window);
         assert!(s.legacy_money_tracker, "the Legacy Viewer's Time / Name / Amount list");
         assert!(s.classic_controls, "the Legacy Viewer's two control windows");
@@ -562,6 +577,12 @@ mod tests {
             "the Prototype inventory is the default"
         );
         assert!(!s.classic_places && !fresh.classic_places, "Prototype's Places is the default");
+        assert_eq!(s.destinations_style, DestinationsStyle::Prototype);
+        assert_eq!(
+            fresh.destinations_style,
+            DestinationsStyle::Prototype,
+            "Prototype's Destinations is the default"
+        );
         assert!(
             !s.classic_outfit_gallery && !fresh.classic_outfit_gallery,
             "the showcase is the default"

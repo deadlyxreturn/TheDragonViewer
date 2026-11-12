@@ -18,6 +18,7 @@ mod sidebar;
 mod smart_bar;
 mod toolbar;
 
+pub(super) use rights::button as rights_button;
 pub(super) use sidebar::Sidebar;
 
 use super::permissions::Rights;
@@ -109,12 +110,13 @@ pub fn demo_place(ctx: &egui::Context, frame: u64) {
     if frame == 2 {
         // "-no-details": the same width, the details hidden
         let size = match mode.strip_suffix("-no-details").unwrap_or(mode) {
-            "prototype-medium" | "prototype-sidebar-medium" | "prototype-worn-medium" => egui::vec2(800.0, 640.0),
+            "prototype-medium" | "prototype-sidebar-medium" | "prototype-worn-medium" | "prototype-delete-confirm-medium" => egui::vec2(800.0, 640.0),
             "prototype-wide"
             | "prototype-worn-wide"
             | "prototype-sidebar-wide"
             | "prototype-smart-wide"
             | "prototype-keyboard-wide"
+            | "prototype-delete-confirm-wide"
             | "prototype-rights"
             | "prototype-columns"
             | "prototype-columns-hidden"

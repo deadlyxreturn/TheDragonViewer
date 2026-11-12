@@ -75,7 +75,7 @@ pub(crate) fn record_tap(stereo: &[f32]) {
         // the recorder is behind (or gone): this block is not recorded
     }
 }
-pub use stream::StreamStatus;
+pub use stream::{StreamError, StreamStatus};
 pub use wind::WindTarget;
 
 use mixer::{ClipVoice, Command, Mixer, PcmSource, SharedParams, WorldVoice};

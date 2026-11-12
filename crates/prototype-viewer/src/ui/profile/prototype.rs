@@ -1054,6 +1054,7 @@ fn more_menu(resp: &Response, env: &Env, w: &Window, f: &Facts, compact: bool) {
         ) {
             act(CtxAction::ShowHistory(Some(id)));
         }
+        context::admin_submenu(ui, p, world, id, act);
     });
 }
 
