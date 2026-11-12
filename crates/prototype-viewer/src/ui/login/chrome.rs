@@ -73,27 +73,6 @@ fn menu_bar(ctx: &Context, p: &Palette, form: &mut LoginForm) -> LoginAction {
                             ui.add_space(8.0);
                         }
                         ui.separator();
-                        // The mockup's menus (bold italic, wide): what works before login
-                        let menu_font = egui::FontId::new(17.0, super::super::fonts::display_bold(ui.ctx()));
-                        ui.style_mut().text_styles.insert(egui::TextStyle::Button, menu_font);
-                        ui.spacing_mut().button_padding = vec2(16.0, 4.0);
-                        ui.menu_button(prototype_i18n::tr!("dragon-menu-file"), |ui| {
-                            menu_action(ui, prototype_i18n::tr!("common-preferences"), &mut action, LoginAction::Preferences);
-                            menu_action(ui, prototype_i18n::tr!("moon-login-advanced"), &mut action, LoginAction::Advanced);
-                            ui.separator();
-                            menu_action(ui, prototype_i18n::tr!("ui-login-exit"), &mut action, LoginAction::Quit);
-                        });
-                        ui.menu_button(prototype_i18n::tr!("dragon-menu-edit"), |ui| {
-                            menu_action(ui, prototype_i18n::tr!("common-preferences"), &mut action, LoginAction::Preferences);
-                        });
-                        ui.menu_button(prototype_i18n::tr!("dragon-menu-view"), |ui| {
-                            menu_action(ui, prototype_i18n::tr!("common-maximize"), &mut action, LoginAction::ToggleMaximize);
-                        });
-                        for name in [prototype_i18n::tr!("dragon-menu-world"), prototype_i18n::tr!("dragon-menu-build")] {
-                            ui.menu_button(name, |ui| {
-                                ui.add_enabled(false, egui::Button::new(prototype_i18n::tr!("dragon-menu-after-login")));
-                            });
-                        }
                         // Help only before login: news, updates, bug reports
                         ui.menu_button(prototype_i18n::tr!("moon-menu-help"), |ui| {
                             if ui.button(prototype_i18n::tr!("ui-login-news")).clicked() {
