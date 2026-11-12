@@ -1902,7 +1902,13 @@ fn pill_button(ui: &mut egui::Ui, p: &Palette, icon: Option<&str>, label: &str, 
         let gold = if main { p.amber.lerp_to_gamma(p.ink, 0.55) } else { p.amber };
         widgets::paint_glyph(ui.painter(), icon, center, 14.0, if p.high_contrast { ink } else { gold });
     }
-    super::widgets::paint_ink_centered(ui.painter(), galley, rect.center() + vec2(lead * 0.5, 0.0), ink);
+    if p.high_contrast {
+        super::widgets::paint_ink_centered(ui.painter(), galley, rect.center() + vec2(lead * 0.5, 0.0), ink);
+    } else {
+        // Dragon Viewer: the OK / Cancel label style on every footer button
+        let _ = galley;
+        super::dragon_art::outlined_text(ui.painter(), rect.center() + vec2(lead * 0.5, 0.0), label, 14.0, egui::Color32::WHITE, egui::Color32::from_rgb(40, 16, 4));
+    }
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
     resp.on_hover_cursor(egui::CursorIcon::PointingHand)
 }
