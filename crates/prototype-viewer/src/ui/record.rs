@@ -29,6 +29,29 @@ fn clock(d: Duration) -> String {
 /// The big round button: a green bubble with the white record dot, or the
 /// stop square while recording (its ring pulsing).
 fn big_button(ui: &mut egui::Ui, p: &Palette, recording: bool, busy: bool) -> egui::Response {
+    // Dragon Viewer: the skin's record button (`record-button`, and
+    // `record-button-active` while recording), its own picture with its word
+    let skin = if recording { "record-button-active" } else { "record-button" };
+    if !p.high_contrast && super::dragon_art::has(skin) {
+        let side = 150.0;
+        let (rect, resp) = ui.allocate_exact_size(Vec2::splat(side), if busy { Sense::hover() } else { Sense::click() });
+        let t = ui.input(|i| i.time) as f32;
+        let hot = resp.hovered() && !busy;
+        if recording {
+            let pulse = 0.5 + 0.5 * (t * 3.0).sin();
+            super::dragon_art::glow(ui.painter(), rect.center(), side * 0.55, egui::Color32::from_rgb(255, 40, 20), 0.5 + 0.5 * pulse);
+            ui.ctx().request_repaint();
+        } else if hot {
+            super::dragon_art::glow(ui.painter(), rect.center(), side * 0.55, egui::Color32::from_rgb(255, 150, 0), 0.8);
+        }
+        let grow = if hot { 4.0 } else { 0.0 };
+        let tint = if busy { egui::Color32::from_gray(150) } else { egui::Color32::WHITE };
+        super::dragon_art::paint(ui.painter(), skin, rect.expand(grow), tint);
+        if hot {
+            ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+        }
+        return resp;
+    }
     let side = 84.0;
     let (rect, resp) = ui.allocate_exact_size(Vec2::splat(side), if busy { Sense::hover() } else { Sense::click() });
     let painter = ui.painter();
@@ -40,7 +63,17 @@ fn big_button(ui: &mut egui::Ui, p: &Palette, recording: bool, busy: bool) -> eg
         ui.ctx().request_repaint();
     }
     let face = egui::Rect::from_center_size(c, Vec2::splat(side - 8.0));
-    widgets::bubble(painter, p, face, face.width() * 0.5, resp.hovered());
+    if p.high_contrast {
+        widgets::bubble(painter, p, face, face.width() * 0.5, resp.hovered());
+    } else {
+        // Dragon Viewer: a glossy orb in a gold rim, red while recording
+        painter.circle_filled(c, face.width() * 0.5 + 3.0, egui::Color32::from_rgb(110, 44, 4));
+        painter.circle_stroke(c, face.width() * 0.5 + 1.5, egui::Stroke::new(2.5, egui::Color32::from_rgb(255, 210, 100)));
+        super::dragon_art::orb(painter, c, face.width() * 0.5, if recording { 1 } else { 4 });
+        if recording {
+            painter.circle_filled(c, face.width() * 0.5, egui::Color32::from_rgba_unmultiplied(220, 20, 10, 90));
+        }
+    }
     if recording {
         let sq = egui::Rect::from_center_size(c, Vec2::splat(24.0));
         painter.rect_filled(sq, 5.0, p.field); // theme-guard: content — the stop square
@@ -77,7 +110,12 @@ pub fn window(ctx: &egui::Context, p: &Palette, open: &mut bool, s: &mut Recorde
             } else {
                 (prototype_i18n::tr!("recorder-start").to_owned(), p.ink)
             };
-            ui.label(RichText::new(line).size(16.0).strong().color(color));
+            if p.high_contrast {
+                ui.label(RichText::new(line).size(16.0).strong().color(color));
+            } else {
+                let (r, _) = ui.allocate_exact_size(Vec2::new(ui.available_width(), 28.0), Sense::hover());
+                super::dragon_art::outlined_text(ui.painter(), r.center(), &line, 22.0, color, egui::Color32::from_rgb(60, 20, 4));
+            }
         });
         ui.add_space(2.0);
         ui.add_enabled_ui(!recording, |ui| {
@@ -207,8 +245,13 @@ pub fn badge(ctx: &egui::Context, p: &Palette, rec: &Recorder) -> Option<RecordA
                                 .monospace()
                                 .color(p.ink),
                         );
-                        if widgets::action_button(ui, p, "player-stop-filled", prototype_i18n::tr!("recorder-stop"), ActionKind::Primary, Vec2::new(0.0, 26.0))
-                            .clicked()
+                        let stop = if p.high_contrast {
+                            widgets::action_button(ui, p, "player-stop-filled", prototype_i18n::tr!("recorder-stop"), ActionKind::Primary, Vec2::new(0.0, 26.0))
+                        } else {
+                            // Dragon Viewer: Stop as the red jewel of Cancel
+                            super::options::jewel_button(ui, p, prototype_i18n::tr!("recorder-stop"), Vec2::new(92.0, 30.0), true)
+                        };
+                        if stop.clicked()
                         {
                             action = Some(RecordAction::Toggle);
                         }
