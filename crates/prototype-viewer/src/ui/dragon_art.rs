@@ -252,10 +252,11 @@ pub fn jewel(painter: &Painter, rect: Rect, red: bool, hot: bool, pressed: bool)
     } else {
         Color32::from_gray(240)
     };
+    if hot && !pressed {
+        // under the pointer: a warm glow behind the jewel, nothing over its face
+        glow(painter, rect.center(), rect.width() * 0.5, if red { Color32::from_rgb(255, 60, 20) } else { Color32::from_rgb(255, 150, 0) }, 0.7);
+    }
     if paint_fill(painter, name, rect, tint) {
-        if hot {
-            painter.rect_filled(rect.shrink(rect.height() * 0.18), rect.height() * 0.3, Color32::from_white_alpha(18));
-        }
         return;
     }
     drawn_jewel(painter, rect, red, hot, pressed);

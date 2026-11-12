@@ -84,22 +84,25 @@ Section "Dragon Viewer" SecMain
   File /r "${SRC}\*.*"
   WriteUninstaller "$INSTDIR\${UNINSTALLER}"
   CreateDirectory "$SMPROGRAMS\Dragon Viewer"
-  CreateShortcut "$SMPROGRAMS\Dragon Viewer\Dragon Viewer.lnk" "$INSTDIR\${VIEWER}" "" "$INSTDIR\${ICON}"
+  CreateShortcut "$SMPROGRAMS\Dragon Viewer\Dragon Viewer.lnk" "$INSTDIR\${VIEWER}" "" "$INSTDIR\${VIEWER}" 0
   CreateShortcut "$SMPROGRAMS\Dragon Viewer\Uninstall Dragon Viewer.lnk" "$INSTDIR\${UNINSTALLER}" "" "$INSTDIR\${ICON}"
 
   WriteRegStr HKCU "${INSTALL_KEY}" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayName" "Dragon Viewer"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayVersion" "${VERSION}"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "Publisher" "Dragon Viewer"
-  WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayIcon" "$INSTDIR\${ICON}"
+  WriteRegStr HKCU "${UNINSTALL_KEY}" "DisplayIcon" "$INSTDIR\${VIEWER},0"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "${UNINSTALL_KEY}" "UninstallString" "$\"$INSTDIR\${UNINSTALLER}$\""
   WriteRegDWORD HKCU "${UNINSTALL_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${UNINSTALL_KEY}" "NoRepair" 1
+  ; Windows keeps old icons in its cache (an earlier install's icon on a
+  ; pinned taskbar button): tell the shell icons changed so it reloads them.
+  System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0x1000, p 0, p 0)'
 SectionEnd
 
 Section "Desktop shortcut" SecDesktop
-  CreateShortcut "$DESKTOP\Dragon Viewer.lnk" "$INSTDIR\${VIEWER}" "" "$INSTDIR\${ICON}"
+  CreateShortcut "$DESKTOP\Dragon Viewer.lnk" "$INSTDIR\${VIEWER}" "" "$INSTDIR\${VIEWER}" 0
 SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
