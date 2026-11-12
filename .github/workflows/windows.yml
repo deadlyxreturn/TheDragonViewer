@@ -41,11 +41,24 @@ jobs:
       - name: Use the skin's app icon
         shell: pwsh
         run: |
-          if (Test-Path skin/app-icon.png) {
+          # skin/app-icon.ico or .png, else the one .ico (and its .png) in skin/
+          $ico = @(Get-ChildItem skin -File -Filter 'app-icon.ico') + @(Get-ChildItem skin -File -Filter '*.ico') | Select-Object -First 1
+          $png = if (Test-Path skin/app-icon.png) { Get-Item skin/app-icon.png } elseif ($ico) { Get-Item ([IO.Path]::ChangeExtension($ico.FullName, '.png')) -ErrorAction SilentlyContinue }
+          if ($ico) {
+            Copy-Item $ico.FullName assets/branding/dragon-viewer.ico -Force
+            "App icon taken from $($ico.Name)"
+          }
+          if ($png) {
+            Copy-Item $png.FullName skin/app-icon.png -Force
+          }
+          if ((Test-Path skin/app-icon.png) -and -not $ico) {
             python -m pip install --quiet pillow
             python -c "from PIL import Image; im = Image.open('skin/app-icon.png').convert('RGBA'); im.thumbnail((256, 256)); c = Image.new('RGBA', (256, 256)); c.paste(im, ((256 - im.width) // 2, (256 - im.height) // 2)); c.save('assets/branding/dragon-viewer.ico', sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]); c.save('assets/branding/dragon-viewer-icon.png')"
             if ($LASTEXITCODE -ne 0) { throw 'App icon conversion failed.' }
             'App icon taken from skin/app-icon.png'
+          } elseif (Test-Path skin/app-icon.png) {
+            python -m pip install --quiet pillow
+            python -c "from PIL import Image; im = Image.open('skin/app-icon.png').convert('RGBA'); im.thumbnail((256, 256)); im.save('assets/branding/dragon-viewer-icon.png')"
           }
       - name: Build and verify Windows x64 package
         shell: pwsh
