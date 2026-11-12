@@ -58,7 +58,7 @@ impl Default for Theme {
             danger_dim: "#6A1A12".into(),
             indigo_light: "#FFD27A".into(),
             on_accent: "#2A1000".into(),
-            panel_alpha: 236,
+            panel_alpha: 205,
             button_radius: 10,
             window_radius: 16,
             font_scale: 1.0,
@@ -261,13 +261,14 @@ impl Theme {
         let hot = p.raised.lerp_to_gamma(p.ink, 0.16);
         w.inactive.bg_fill = p.raised;
         w.inactive.weak_bg_fill = p.raised;
-        w.inactive.bg_stroke = Stroke::new(1.0, p.raised);
+        // Dragon Viewer: every button in a thin gold rim
+        w.inactive.bg_stroke = Stroke::new(1.0, p.amber.gamma_multiply(0.7));
         w.inactive.fg_stroke = Stroke::new(1.0, p.ink);
         w.inactive.corner_radius = br;
 
         w.hovered.bg_fill = hot;
         w.hovered.weak_bg_fill = hot;
-        w.hovered.bg_stroke = Stroke::new(1.0, hot);
+        w.hovered.bg_stroke = Stroke::new(1.4, Color32::from_rgb(255, 230, 150));
         w.hovered.fg_stroke = Stroke::new(1.0, p.ink);
         w.hovered.corner_radius = br;
         w.hovered.expansion = 0.0;

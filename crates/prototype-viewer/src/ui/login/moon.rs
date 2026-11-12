@@ -80,8 +80,8 @@ pub(super) fn card_face(ctx: &egui::Context, rect: Rect) -> Shape {
                 ctx,
                 rect.shrink(6.0),
                 radius - 6.0,
-                Color32::from_rgba_unmultiplied(30, 24, 56, 215),
-                Color32::from_rgba_unmultiplied(10, 8, 26, 232),
+                Color32::from_rgba_unmultiplied(34, 28, 62, 170),
+                Color32::from_rgba_unmultiplied(10, 8, 26, 196),
             ),
             Shape::image(t.id(), rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE),
         ]);

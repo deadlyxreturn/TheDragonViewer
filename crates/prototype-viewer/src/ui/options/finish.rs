@@ -18,8 +18,8 @@ pub(super) fn glass_wash(painter: &Painter, p: &Palette, rect: Rect, radius: f32
             painter,
             rect,
             radius,
-            Color32::from_rgba_unmultiplied(26, 26, 54, 205),
-            Color32::from_rgba_unmultiplied(8, 8, 24, 225),
+            Color32::from_rgba_unmultiplied(30, 30, 62, 120),
+            Color32::from_rgba_unmultiplied(8, 8, 24, 150),
         );
         // glossy reflection across the top of the glass
         let gloss = Rect::from_min_max(rect.min, pos2(rect.right(), rect.top() + rect.height() * 0.32));
