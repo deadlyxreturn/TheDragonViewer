@@ -65,6 +65,18 @@ try {
     $archive = Join-Path $release "$packageName.zip"
     $setup = Join-Path $release "Dragon-Viewer-Setup-$version.exe"
     & "$PSScriptRoot/package.ps1" -Exe $exePath -Out $packageDir
+    # The recorder encodes with FFmpeg (GPL build, its licence beside it),
+    # shipped next to the viewer so recording works out of the box
+    $ffZip = Join-Path $stage 'ffmpeg.zip'
+    $ffDir = Join-Path $stage 'ffmpeg-dl'
+    Invoke-WebRequest -Uri 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip' -OutFile $ffZip
+    Expand-Archive -LiteralPath $ffZip -DestinationPath $ffDir
+    $ffBin = Get-ChildItem -LiteralPath $ffDir -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+    if (-not $ffBin) { throw 'ffmpeg.exe not found in the download' }
+    Copy-Item -LiteralPath $ffBin.FullName -Destination (Join-Path $packageDir 'ffmpeg.exe')
+    $ffLicense = Get-ChildItem -LiteralPath $ffDir -Recurse -Filter LICENSE.txt | Select-Object -First 1
+    if ($ffLicense) { Copy-Item -LiteralPath $ffLicense.FullName -Destination (Join-Path $packageDir 'ffmpeg-LICENSE.txt') }
+    Remove-Item -LiteralPath $ffZip, $ffDir -Recurse -Force
     # Windows tar writes ZIP paths with forward slashes, including the package root.
     & tar.exe -a -cf $archive -C $stage $packageName
     if ($LASTEXITCODE -ne 0) { throw "ZIP creation failed with exit code $LASTEXITCODE." }
