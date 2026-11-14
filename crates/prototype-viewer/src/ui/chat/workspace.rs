@@ -156,7 +156,12 @@ pub(super) fn show(ui: &mut egui::Ui, env: Env, world: &mut World, st: &mut Chat
         docked,
         compact,
     } = env;
-    let size = ui.available_size();
+    let mut size = ui.available_size();
+    // Dragon Viewer: room at the foot of the window for the skin's trim
+    // and its ball, under the composer
+    if !docked && !p.high_contrast && crate::ui::dragon_art::texture(ui.ctx(), "messenger/footer-trim").is_some() {
+        size.y -= FOOT_TRIM;
+    }
     let h = size.y.max(160.0);
     // the window's edge dragged: its width changes under a held button
     st.layout_dragged = ui.input(|i| i.pointer.primary_down()) && st.layout_width.is_some_and(|w| (w - size.x).abs() > 0.1);
@@ -662,3 +667,6 @@ fn our_names(world: &World, own_name: &str) -> Vec<String> {
 #[cfg(test)]
 #[path = "workspace_tests.rs"]
 mod tests;
+
+/// The room kept under the composer for Dragon Viewer's footer trim.
+pub(crate) const FOOT_TRIM: f32 = 44.0;

@@ -4085,14 +4085,16 @@ fn messenger_trim(painter: &egui::Painter, rect: egui::Rect) {
     }
     if let Some(t) = dragon_art::texture(painter.ctx(), "messenger/footer-trim") {
         let [w, h] = t.size();
-        let width = rect.width() * 0.86;
-        let height = width * h as f32 / w.max(1) as f32;
-        let at = egui::Rect::from_center_size(egui::pos2(rect.center().x, rect.bottom() - height * 0.32), Vec2::new(width, height));
+        // inside the window's foot, in the room the messenger keeps under
+        // its composer (`chat::workspace::FOOT_TRIM`), the ball at its middle
+        let width = rect.width() - 24.0;
+        let height = (width * h as f32 / w.max(1) as f32).min(40.0);
+        let at = egui::Rect::from_min_max(egui::pos2(rect.left() + 12.0, rect.bottom() - 6.0 - height), egui::pos2(rect.right() - 12.0, rect.bottom() - 6.0));
         painter.image(t.id(), at, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), Color32::WHITE);
-        let c = egui::pos2(rect.center().x, rect.bottom() - 2.0);
-        if !dragon_art::paint(painter, "messenger/footer-four-star-ball", egui::Rect::from_center_size(c, Vec2::splat(44.0)), Color32::WHITE) {
-            dragon_art::glow(painter, c, 30.0, Color32::from_rgb(255, 150, 0), 0.7);
-            dragon_art::orb(painter, c, 17.0, 4);
+        let c = egui::pos2(rect.center().x, at.center().y);
+        if !dragon_art::paint(painter, "messenger/footer-four-star-ball", egui::Rect::from_center_size(c, Vec2::splat(42.0)), Color32::WHITE) {
+            dragon_art::glow(painter, c, 28.0, Color32::from_rgb(255, 150, 0), 0.7);
+            dragon_art::orb(painter, c, 16.0, 4);
         }
     }
 }
