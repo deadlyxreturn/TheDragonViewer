@@ -242,6 +242,12 @@ fn contacts_pane(ui: &mut egui::Ui, p: &Palette, pane: egui::Rect, content: impl
         ..egui::CornerRadius::ZERO
     };
     ui.painter().rect_filled(pane, radius, p.field.gamma_multiply(0.31));
+    // Dragon Viewer: the skin's chat background, its foot (the art's) kept
+    if !p.high_contrast
+        && crate::ui::dragon_art::paint_cover(&ui.painter().with_clip_rect(pane), "messenger/chat-background", pane, egui::vec2(0.5, 1.0), Color32::from_gray(235))
+    {
+        ui.painter().rect_filled(pane, radius, Color32::from_rgba_unmultiplied(6, 4, 18, 70));
+    }
     let mut child = ui.new_child(
         egui::UiBuilder::new()
             .id_salt("conversation_contacts")
@@ -285,6 +291,12 @@ pub(super) fn pane(
         ..egui::CornerRadius::ZERO
     };
     ui.painter().rect_filled(pane, radius, p.field.gamma_multiply(0.31));
+    // Dragon Viewer: the skin's chat background, its foot (the art's) kept
+    if !p.high_contrast
+        && crate::ui::dragon_art::paint_cover(&ui.painter().with_clip_rect(pane), "messenger/chat-background", pane, egui::vec2(0.5, 1.0), Color32::from_gray(235))
+    {
+        ui.painter().rect_filled(pane, radius, Color32::from_rgba_unmultiplied(6, 4, 18, 70));
+    }
     let width = pane.width();
     let kind = st.selected.map(|id| sidebar::kind(world, &id));
     drops(ui, p, pane, st, kind, actions);

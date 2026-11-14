@@ -301,6 +301,19 @@ pub(super) fn show(
         ..egui::CornerRadius::ZERO
     };
     ui.painter().rect_filled(column, radius, p.bar.gamma_multiply(0.75));
+    // Dragon Viewer: the skin's sidebar picture, its foot (the art's) kept
+    if !p.high_contrast
+        && crate::ui::dragon_art::paint_cover(&ui.painter().with_clip_rect(column), "messenger/sidebar-background", column, egui::vec2(0.5, 1.0), Color32::WHITE)
+    {
+        // the top, where the rows are, darker so they read
+        crate::ui::widgets::gradient_rect(
+            ui.painter(),
+            egui::Rect::from_min_max(column.min, egui::pos2(column.right(), column.top() + column.height() * 0.55)),
+            0.0,
+            Color32::from_rgba_unmultiplied(8, 6, 22, 200),
+            Color32::TRANSPARENT,
+        );
+    }
     // Dragon Viewer: a glass sheen down the column and a gold divider
     if !p.high_contrast {
         crate::ui::widgets::gradient_rect(
@@ -1060,6 +1073,18 @@ pub(super) fn paint_picture(ui: &egui::Ui, p: &Palette, icon: &Icon, name: &str,
         }
         Icon::Group(insignia) => paint_group_picture(ui, p, rect, *insignia, GLYPH),
         Icon::Glyph(glyph, color) => {
+            // Dragon Viewer: the skin's Contacts and Nearby chat icons
+            let skin = match *glyph {
+                "users" if *color == p.violet_pale => Some("messenger/sidebar-contacts"),
+                "map-pin-filled" => Some("messenger/sidebar-nearby"),
+                _ => None,
+            };
+            if !p.high_contrast
+                && let Some(name) = skin
+                && crate::ui::dragon_art::paint(ui.painter(), name, rect.shrink(1.0), Color32::WHITE)
+            {
+                return;
+            }
             ui.painter().rect_filled(rect, radius, color.gamma_multiply(0.16));
             super::thread::paint_icon(
                 ui.painter(),

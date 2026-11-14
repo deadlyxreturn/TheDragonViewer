@@ -348,6 +348,11 @@ fn roomy_row(
 ) -> egui::Rect {
     let p = env.p;
     let text_w = (width - GUTTER - RIGHT).max(60.0);
+    // Dragon Viewer: the skin's header strip behind the picture and the
+    // name, the time at its right end, the text under it
+    let strip = head && !p.high_contrast && crate::ui::dragon_art::texture(ui.ctx(), "messenger/message-header").is_some();
+    let under = ui.painter().add(egui::Shape::Noop);
+    let mut time_at = None;
     let row = ui.horizontal_top(|ui| {
         ui.spacing_mut().item_spacing.x = 0.0;
         let (gutter, _) = ui.allocate_exact_size(egui::vec2(GUTTER, if head { AVATAR } else { 1.0 }), egui::Sense::hover());
@@ -361,7 +366,21 @@ fn roomy_row(
         ui.vertical(|ui| {
             ui.set_width(text_w);
             ui.spacing_mut().item_spacing.y = 1.0;
-            if head {
+            if head && strip {
+                let size = egui::vec2(text_w, AVATAR + 4.0);
+                ui.allocate_ui_with_layout(size, egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                    ui.set_min_size(size);
+                    ui.spacing_mut().item_spacing.x = 7.0;
+                    let color = name_color(env, th, line, who);
+                    name_label(ui, env, line, name, color, who, text_w * 0.6);
+                    tags(ui, p, th, line, who);
+                });
+                let time = when(line);
+                if th.times && !time.is_empty() {
+                    time_at = Some(time);
+                }
+                ui.add_space(3.0);
+            } else if head {
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 7.0;
                     let color = name_color(env, th, line, who);
@@ -393,6 +412,22 @@ fn roomy_row(
             super::previews::cards(ui, env, line, &text);
         });
     });
+    if strip {
+        let top = row.response.rect.top();
+        let band = egui::Rect::from_min_max(egui::pos2(row.response.rect.left() + 4.0, top), egui::pos2(row.response.rect.left() + width - 6.0, top + AVATAR + 4.0));
+        if let Some(shape) = crate::ui::dragon_art::three_slice_shape(ui.ctx(), "messenger/message-header", band, egui::Color32::WHITE) {
+            ui.painter().set(under, shape);
+        }
+        if let Some(time) = time_at {
+            ui.painter().text(
+                egui::pos2(band.right() - 16.0, band.center().y),
+                egui::Align2::RIGHT_CENTER,
+                time,
+                egui::FontId::proportional(chat_size(ui.ctx(), 12.0)),
+                egui::Color32::from_rgb(255, 236, 200),
+            );
+        }
+    }
     row.response.rect
 }
 
@@ -570,6 +605,10 @@ fn notice(ui: &mut egui::Ui, env: &mut LineEnv, th: &Thread, line: &ChatLine, ma
 
 /// The line between two days, with the day in its middle.
 fn day_separator(ui: &mut egui::Ui, p: &Palette, text: &str) {
+    if !p.high_contrast && crate::ui::dragon_art::texture(ui.ctx(), "messenger/date-divider-left").is_some() {
+        skin_day_separator(ui, p, text);
+        return;
+    }
     ui.add_space(8.0);
     let (rect, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 18.0), egui::Sense::hover());
     let galley = ui
@@ -729,4 +768,34 @@ mod tests {
         // too short a name never marks
         assert!(!names_in("an ox", &["ox".to_owned()]));
     }
+}
+
+/// Dragon Viewer's day line from the skin: its two glowing rules, a ball
+/// at each side of the day (`messenger/date-ball-left` and `-right`, else
+/// the skin's four-star orb) and the day in gold between them.
+fn skin_day_separator(ui: &mut egui::Ui, p: &Palette, text: &str) {
+    use crate::ui::dragon_art;
+    let _ = p;
+    ui.add_space(8.0);
+    let (rect, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 26.0), egui::Sense::hover());
+    let painter = ui.painter();
+    let gold = egui::Color32::from_rgb(255, 212, 110);
+    let galley = painter.layout_no_wrap(text.to_owned(), egui::FontId::proportional(chat_size(ui.ctx(), 13.0)), gold);
+    let c = rect.center();
+    let half = galley.size().x * 0.5 + 12.0;
+    let ball = 11.0;
+    for (side, rule, orb) in [(-1.0f32, "messenger/date-divider-left", "messenger/date-ball-left"), (1.0, "messenger/date-divider-right", "messenger/date-ball-right")] {
+        let at = egui::pos2(c.x + side * (half + ball), c.y);
+        if !dragon_art::paint(painter, orb, egui::Rect::from_center_size(at, egui::Vec2::splat(ball * 2.2)), egui::Color32::WHITE) {
+            dragon_art::orb(painter, at, ball, 4);
+        }
+        let inner = c.x + side * (half + ball * 2.2 + 4.0);
+        let outer = if side < 0.0 { rect.left() + 20.0 } else { rect.right() - 20.0 };
+        let r = egui::Rect::from_min_max(egui::pos2(inner.min(outer), c.y - 10.0), egui::pos2(inner.max(outer), c.y + 10.0));
+        if r.width() > 4.0 {
+            dragon_art::paint_fill(painter, rule, r, egui::Color32::WHITE);
+        }
+    }
+    painter.galley(egui::pos2(c.x - galley.size().x * 0.5, c.y - galley.size().y * 0.5), galley, gold);
+    ui.add_space(4.0);
 }

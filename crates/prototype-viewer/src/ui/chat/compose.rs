@@ -124,9 +124,14 @@ pub(super) fn show(
             if st.recent_emojis.above {
                 st.recent_emojis.strip(ui, p, emoji, width - 28.0, conv_input, &mut draft);
             }
+            // Dragon Viewer: the skin's composer strip behind the field
+            let skinned = !p.high_contrast && crate::ui::dragon_art::texture(ui.ctx(), "messenger/composer-field").is_some();
+            let under = ui.painter().add(egui::Shape::Noop);
             let field = egui::Frame::new()
-                .fill(p.raised)
-                .stroke(if p.high_contrast {
+                .fill(if skinned { egui::Color32::TRANSPARENT } else { p.raised })
+                .stroke(if skinned {
+                    egui::Stroke::NONE
+                } else if p.high_contrast {
                     egui::Stroke::NONE
                 } else {
                     egui::Stroke::new(1.3, p.amber.lerp_to_gamma(p.ink, 0.45).gamma_multiply(0.8))
@@ -200,6 +205,11 @@ pub(super) fn show(
                     })
                     .inner
                 });
+            if skinned
+                && let Some(shape) = crate::ui::dragon_art::three_slice_shape(ui.ctx(), "messenger/composer-field", field.response.rect.expand2(egui::vec2(4.0, 3.0)), egui::Color32::WHITE)
+            {
+                ui.painter().set(under, shape);
+            }
             let resp = field.inner;
             // ---- or under it, with the Legacy chat style
             if !st.recent_emojis.above {
@@ -326,6 +336,12 @@ fn typing_job(ctx: &egui::Context, p: &Palette, text: &str, names: &[String], wi
 fn box_button(ui: &mut egui::Ui, p: &Palette, icon: &str, tip: &str, active: bool) -> egui::Response {
     let (rect, _) = ui.allocate_exact_size(egui::Vec2::splat(BUTTON), egui::Sense::hover());
     let resp = ui.interact(rect, sidebar::control_id(&format!("box-{icon}")), egui::Sense::click());
+    if icon == "mood-smile-filled"
+        && !p.high_contrast
+        && crate::ui::dragon_art::skin_button(ui.painter(), "messenger/emoji", rect.expand(2.0), active || resp.hovered(), true)
+    {
+        return resp.on_hover_text(tip);
+    }
     if active || resp.hovered() {
         ui.painter()
             .rect_filled(rect, ui.visuals().widgets.inactive.corner_radius, p.field.gamma_multiply(0.8));
@@ -398,6 +414,9 @@ fn volume_button(ui: &mut egui::Ui, p: &Palette, st: &mut ChatUi, named: bool) {
 fn send_button(ui: &mut egui::Ui, p: &Palette, enabled: bool) -> egui::Response {
     let (rect, _) = ui.allocate_exact_size(egui::Vec2::splat(BUTTON), egui::Sense::hover());
     let resp = ui.interact(rect, sidebar::control_id("box-send"), egui::Sense::click());
+    if !p.high_contrast && crate::ui::dragon_art::skin_button(ui.painter(), "messenger/send", rect.expand2(egui::vec2(9.0, 4.0)), resp.hovered(), enabled) {
+        return resp.on_hover_text(prototype_i18n::tr!("ui-chat-send"));
+    }
     if enabled && resp.hovered() {
         ui.painter()
             .rect_filled(rect, ui.visuals().widgets.inactive.corner_radius, p.field.gamma_multiply(0.8));

@@ -1105,6 +1105,9 @@ impl<'a> Floater<'a> {
                     }
                     let layer = ctx.layer_painter(response.response.layer_id);
                     moon_window_rim(&layer, p, response.response.rect, radius);
+                    if !p.high_contrast {
+                        messenger_trim(&layer, response.response.rect);
+                    }
                 }
             }
             if !minimized {
@@ -1624,6 +1627,23 @@ fn title_button_sized(ui: &mut egui::Ui, p: &Palette, icon: &str, size: Vec2) ->
 }
 
 fn paint_title_button(ui: &egui::Ui, p: &Palette, icon: &str, resp: &egui::Response) {
+    // Dragon Viewer: the skin's window controls when it has them
+    let skin = match icon {
+        "x" => Some("messenger/window-close"),
+        "minus" => Some("messenger/window-minimize"),
+        "square" | "arrows-maximize" | "arrows-minimize" => Some("messenger/window-maximize"),
+        "external-link" | "window-pop-out" | "arrow-up-right" => Some("messenger/window-pop-out"),
+        _ => None,
+    };
+    if !p.high_contrast
+        && let Some(name) = skin
+        && super::dragon_art::skin_button(ui.painter(), name, resp.rect.expand(3.0), resp.hovered(), true)
+    {
+        if resp.hovered() {
+            ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+        }
+        return;
+    }
     // Gold rims keep window controls distinct from selected content.
     if matches!(icon, "x" | "minus" | "square" | "arrows-maximize" | "arrows-minimize") {
         let c = resp.rect.center();
@@ -4046,6 +4066,33 @@ mod maturity_tests {
         for (r, letter) in [(SIM_ACCESS_PG, "G"), (SIM_ACCESS_MATURE, "M"), (SIM_ACCESS_ADULT, "A")] {
             let (got, _, _) = maturity_style(&p, super::super::bars::maturity_name(r)).unwrap();
             assert_eq!(got, letter);
+        }
+    }
+}
+
+/// Dragon Viewer's messenger dress: the skin's dragon over the title bar's
+/// right end, its gold trim along the bottom edge and a ball at the trim's
+/// middle (`messenger/footer-four-star-ball`, else the skin's four-star orb).
+fn messenger_trim(painter: &egui::Painter, rect: egui::Rect) {
+    use super::dragon_art;
+    if let Some(t) = dragon_art::texture(painter.ctx(), "messenger/title-dragon") {
+        let [w, h] = t.size();
+        let height = 74.0;
+        let width = height * w as f32 / h.max(1) as f32;
+        // over the title bar, left of the window controls
+        let at = egui::Rect::from_min_size(egui::pos2(rect.right() - 150.0 - width, rect.top() - 18.0), Vec2::new(width, height));
+        painter.image(t.id(), at, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), Color32::WHITE);
+    }
+    if let Some(t) = dragon_art::texture(painter.ctx(), "messenger/footer-trim") {
+        let [w, h] = t.size();
+        let width = rect.width() * 0.86;
+        let height = width * h as f32 / w.max(1) as f32;
+        let at = egui::Rect::from_center_size(egui::pos2(rect.center().x, rect.bottom() - height * 0.32), Vec2::new(width, height));
+        painter.image(t.id(), at, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), Color32::WHITE);
+        let c = egui::pos2(rect.center().x, rect.bottom() - 2.0);
+        if !dragon_art::paint(painter, "messenger/footer-four-star-ball", egui::Rect::from_center_size(c, Vec2::splat(44.0)), Color32::WHITE) {
+            dragon_art::glow(painter, c, 30.0, Color32::from_rgb(255, 150, 0), 0.7);
+            dragon_art::orb(painter, c, 17.0, 4);
         }
     }
 }
