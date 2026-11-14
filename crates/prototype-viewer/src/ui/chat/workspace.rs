@@ -159,7 +159,7 @@ pub(super) fn show(ui: &mut egui::Ui, env: Env, world: &mut World, st: &mut Chat
     let mut size = ui.available_size();
     // Dragon Viewer: room at the foot of the window for the skin's trim
     // and its ball, under the composer
-    if !docked && !p.high_contrast && crate::ui::dragon_art::texture(ui.ctx(), "messenger/footer-trim").is_some() {
+    if !p.high_contrast && crate::ui::dragon_art::texture(ui.ctx(), "messenger/footer-trim").is_some() {
         size.y -= FOOT_TRIM;
     }
     let h = size.y.max(160.0);
