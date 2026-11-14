@@ -789,11 +789,26 @@ fn skin_day_separator(ui: &mut egui::Ui, p: &Palette, text: &str) {
         if !dragon_art::paint(painter, orb, egui::Rect::from_center_size(at, egui::Vec2::splat(ball * 2.2)), egui::Color32::WHITE) {
             dragon_art::orb(painter, at, ball, 4);
         }
-        let inner = c.x + side * (half + ball * 2.2 + 4.0);
-        let outer = if side < 0.0 { rect.left() + 20.0 } else { rect.right() - 20.0 };
-        let r = egui::Rect::from_min_max(egui::pos2(inner.min(outer), c.y - 10.0), egui::pos2(inner.max(outer), c.y + 10.0));
-        if r.width() > 4.0 {
-            dragon_art::paint_fill(painter, rule, r, egui::Color32::WHITE);
+        // the rule at its own shape (never stretched), from beside the ball
+        // outwards, as long as the room allows
+        if let Some(t) = dragon_art::texture(ui.ctx(), rule) {
+            let [w, h] = t.size();
+            let height = 22.0;
+            let inner = c.x + side * (half + ball * 2.2 + 2.0);
+            let outer = if side < 0.0 { rect.left() + 16.0 } else { rect.right() - 16.0 };
+            let width = (height * w as f32 / h.max(1) as f32).min((outer - inner).abs());
+            if width > 8.0 {
+                let (l, r) = if side < 0.0 { (inner - width, inner) } else { (inner, inner + width) };
+                let at = egui::Rect::from_min_max(egui::pos2(l, c.y - height * 0.5), egui::pos2(r, c.y + height * 0.5));
+                // the art's own crop: its inner end against the ball
+                let u = width / (height * w as f32 / h.max(1) as f32);
+                let uv = if side < 0.0 {
+                    egui::Rect::from_min_max(egui::pos2(1.0 - u, 0.0), egui::pos2(1.0, 1.0))
+                } else {
+                    egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(u, 1.0))
+                };
+                painter.image(t.id(), at, uv, egui::Color32::WHITE);
+            }
         }
     }
     painter.galley(egui::pos2(c.x - galley.size().x * 0.5, c.y - galley.size().y * 0.5), galley, gold);
