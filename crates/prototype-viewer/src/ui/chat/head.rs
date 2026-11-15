@@ -112,6 +112,11 @@ pub(super) fn show(
     let width = ui.available_width();
     let gap = crate::ui::widgets::two_lines_gap(ui, &egui::FontId::proportional(14.0), &egui::FontId::proportional(12.0), LINE_GAP);
     let (rect, _) = ui.allocate_exact_size(egui::vec2(width, HEIGHT + gap - LINE_GAP), egui::Sense::hover());
+    // Dragon Viewer: the skin's profile banner behind the head, its right
+    // end (the art's) kept in view
+    if !p.high_contrast {
+        crate::ui::dragon_art::paint_cover(&ui.painter().with_clip_rect(rect), "messenger/profile-banner", rect, egui::vec2(0.75, 0.5), Color32::WHITE);
+    }
     ui.painter().hline(
         rect.x_range(),
         rect.bottom() - 0.5,
@@ -410,10 +415,30 @@ fn tool(ui: &mut egui::Ui, p: &Palette, rect: egui::Rect, icon: &str, tip: &str,
             ui.painter().rect_filled(rect, radius, p.raised.gamma_multiply(0.7));
         }
     } else {
-        // Dragon Viewer: a round glossy glass button
+        // Dragon Viewer: the skin's button for this action, else a round
+        // glossy glass button
+        let skin = match icon {
+            "x" => Some("messenger/action-close"),
+            "dots-filled" => Some("messenger/action-more"),
+            "user-filled" => Some("messenger/action-profile"),
+            "send-filled" => Some("messenger/action-plane"),
+            "phone-filled" => Some("messenger/action-call"),
+            "car" | "car-filled" => Some("messenger/action-teleport"),
+            _ => None,
+        };
+        let hot = resp.hovered() && tone != Tone::Off;
+        if let Some(name) = skin
+            && crate::ui::dragon_art::skin_button(ui.painter(), name, rect.expand(5.0), hot || tone == Tone::Active, tone != Tone::Off)
+        {
+            if tone == Tone::Live {
+                // a call in progress: a green ring round the button
+                ui.painter().circle_stroke(rect.center(), rect.width() * 0.62, egui::Stroke::new(2.0, p.success));
+            }
+            return resp.on_hover_text(tip);
+        }
         let d = rect.width().min(rect.height()) - 2.0;
         let disc = egui::Rect::from_center_size(rect.center(), egui::Vec2::splat(d));
-        crate::ui::widgets::moon_glass(ui.painter(), p, disc, d * 0.5, resp.hovered() && tone != Tone::Off, tone == Tone::Active);
+        crate::ui::widgets::moon_glass(ui.painter(), p, disc, d * 0.5, hot, tone == Tone::Active);
     }
     let color: Color32 = match tone {
         Tone::Live => p.success,

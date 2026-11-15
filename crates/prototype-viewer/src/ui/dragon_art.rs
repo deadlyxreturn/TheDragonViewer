@@ -420,9 +420,19 @@ pub fn toolbar_face(painter: &Painter, rect: Rect, active: bool, hot: bool) -> b
 /// ends (as wide as the picture is high, scaled to the rect's height) kept,
 /// its middle stretched. False when the skin has none.
 pub fn three_slice(painter: &Painter, name: &str, rect: Rect, tint: Color32) -> bool {
-    let Some(t) = texture(painter.ctx(), name) else {
-        return false;
-    };
+    match three_slice_shape(painter.ctx(), name, rect, tint) {
+        Some(shape) => {
+            painter.add(shape);
+            true
+        }
+        None => false,
+    }
+}
+
+/// `three_slice` as a shape, for a slot reserved under content.
+pub fn three_slice_shape(ctx: &Context, name: &str, rect: Rect, tint: Color32) -> Option<egui::Shape> {
+    let t = texture(ctx, name)?;
+    let mut shapes = Vec::new();
     let [w, h] = t.size();
     let (w, h) = (w as f32, h as f32);
     let cap_px = (h * 0.5).min(w * 0.5);
@@ -437,10 +447,10 @@ pub fn three_slice(painter: &Painter, name: &str, rect: Rect, tint: Color32) -> 
         (Rect::from_min_max(pos2(rect.right() - cap, rect.top()), rect.max), Rect::from_min_max(pos2(1.0 - u, 0.0), pos2(1.0, 1.0))),
     ] {
         if r.width() > 0.0 {
-            painter.image(t.id(), r, uv, tint);
+            shapes.push(egui::Shape::image(t.id(), r, uv, tint));
         }
     }
-    true
+    Some(egui::Shape::Vec(shapes))
 }
 
 /// The skin's short name for a toolbar command, if it gives one.
@@ -574,4 +584,38 @@ fn decode_animation(ctx: &Context, name: &str) -> Option<Animation> {
         delays.push(if ms < 20.0 { 0.066 } else { ms / 1000.0 });
     }
     (!frames.is_empty()).then_some(Animation { frames, delays, size })
+}
+
+/// Draws the picture `name` covering `rect` (cropped, never stretched),
+/// the crop held at `anchor` (0 left/top … 1 right/bottom), under `clip`.
+pub fn paint_cover(painter: &Painter, name: &str, rect: Rect, anchor: Vec2, tint: Color32) -> bool {
+    let Some(t) = texture(painter.ctx(), name) else {
+        return false;
+    };
+    let [w, h] = t.size();
+    let scale = (rect.width() / w as f32).max(rect.height() / h as f32);
+    let (sw, sh) = (rect.width() / (w as f32 * scale), rect.height() / (h as f32 * scale));
+    let uv = Rect::from_min_size(pos2((1.0 - sw) * anchor.x, (1.0 - sh) * anchor.y), vec2(sw, sh));
+    painter.image(t.id(), rect, uv, tint);
+    true
+}
+
+/// A skin button picture `name` fitted in `rect`: brighter and glowing
+/// while hovered. False when the skin has none (the caller draws its own).
+pub fn skin_button(painter: &Painter, name: &str, rect: Rect, hot: bool, enabled: bool) -> bool {
+    let Some(t) = texture(painter.ctx(), name) else {
+        return false;
+    };
+    if hot && enabled {
+        glow(painter, rect.center(), rect.width() * 0.62, Color32::from_rgb(255, 150, 0), 0.55);
+    }
+    let tint = if !enabled {
+        Color32::from_gray(120)
+    } else if hot {
+        Color32::WHITE
+    } else {
+        Color32::from_gray(228)
+    };
+    paint_contain(painter, &t, rect, tint);
+    true
 }

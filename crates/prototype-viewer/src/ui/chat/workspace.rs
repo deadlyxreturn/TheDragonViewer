@@ -156,7 +156,12 @@ pub(super) fn show(ui: &mut egui::Ui, env: Env, world: &mut World, st: &mut Chat
         docked,
         compact,
     } = env;
-    let size = ui.available_size();
+    let mut size = ui.available_size();
+    // Dragon Viewer: room at the foot of the window for the skin's trim
+    // and its ball, under the composer
+    if !p.high_contrast && crate::ui::dragon_art::texture(ui.ctx(), "messenger/footer-trim").is_some() {
+        size.y -= FOOT_TRIM;
+    }
     let h = size.y.max(160.0);
     // the window's edge dragged: its width changes under a held button
     st.layout_dragged = ui.input(|i| i.pointer.primary_down()) && st.layout_width.is_some_and(|w| (w - size.x).abs() > 0.1);
@@ -242,6 +247,12 @@ fn contacts_pane(ui: &mut egui::Ui, p: &Palette, pane: egui::Rect, content: impl
         ..egui::CornerRadius::ZERO
     };
     ui.painter().rect_filled(pane, radius, p.field.gamma_multiply(0.31));
+    // Dragon Viewer: the skin's chat background, its foot (the art's) kept
+    if !p.high_contrast
+        && crate::ui::dragon_art::paint_cover(&ui.painter().with_clip_rect(pane), "messenger/chat-background", pane, egui::vec2(0.5, 1.0), egui::Color32::from_gray(235))
+    {
+        ui.painter().rect_filled(pane, radius, egui::Color32::from_rgba_unmultiplied(6, 4, 18, 70));
+    }
     let mut child = ui.new_child(
         egui::UiBuilder::new()
             .id_salt("conversation_contacts")
@@ -285,6 +296,12 @@ pub(super) fn pane(
         ..egui::CornerRadius::ZERO
     };
     ui.painter().rect_filled(pane, radius, p.field.gamma_multiply(0.31));
+    // Dragon Viewer: the skin's chat background, its foot (the art's) kept
+    if !p.high_contrast
+        && crate::ui::dragon_art::paint_cover(&ui.painter().with_clip_rect(pane), "messenger/chat-background", pane, egui::vec2(0.5, 1.0), egui::Color32::from_gray(235))
+    {
+        ui.painter().rect_filled(pane, radius, egui::Color32::from_rgba_unmultiplied(6, 4, 18, 70));
+    }
     let width = pane.width();
     let kind = st.selected.map(|id| sidebar::kind(world, &id));
     drops(ui, p, pane, st, kind, actions);
@@ -650,3 +667,6 @@ fn our_names(world: &World, own_name: &str) -> Vec<String> {
 #[cfg(test)]
 #[path = "workspace_tests.rs"]
 mod tests;
+
+/// The room kept under the composer for Dragon Viewer's footer trim.
+pub(crate) const FOOT_TRIM: f32 = 44.0;
