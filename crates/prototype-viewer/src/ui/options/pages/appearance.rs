@@ -24,6 +24,7 @@ pub fn page(cx: &mut Cx, tab: usize) {
             prototype_themes(cx);
             // Prototype keeps one colour: no interface colour editor here
             let _ = interface_colors;
+            opacity(cx);
             cx.group(tr!("extra-skin"), |cx| {
                 cx.link(
                     tr!("ui-options-high-contrast"),
@@ -571,4 +572,84 @@ mod tests {
         }
         assert!(!frame(&ctx, vec![], &mut filter).2, "picking a font closes the list");
     }
+}
+
+/// How much of the world shows through (`ui::surface_opacity`); the Legacy
+/// Viewer's Colors › Floater Opacity, and the bars. Greyed in high contrast,
+/// which keeps every surface opaque.
+fn opacity(cx: &mut Cx) {
+    use prototype_i18n::tr;
+    cx.group(tr!("ui-options-opacity"), |cx| {
+        cx.note(tr!("ui-options-opacity-help"));
+        cx.greyed(crate::high_contrast::current());
+        cx.slider(
+            tr!("ui-options-opacity-active"),
+            tr!("ui-options-opacity-active-hint"),
+            &field!(window_opacity_active),
+            0.0..=1.0,
+            "",
+        );
+        cx.slider(
+            tr!("ui-options-opacity-inactive"),
+            tr!("ui-options-opacity-inactive-hint"),
+            &field!(window_opacity_inactive),
+            0.0..=1.0,
+            "",
+        );
+        cx.slider(
+            tr!("ui-options-opacity-conversations"),
+            tr!("ui-options-opacity-conversations-hint"),
+            &field!(conversations_opacity),
+            0.0..=1.0,
+            "",
+        );
+        cx.toggle(
+            tr!("ui-options-opacity-conversations-override"),
+            "",
+            &field!(conversations_active_opacity_override),
+        );
+        cx.slider(
+            tr!("ui-options-opacity-bars"),
+            tr!("ui-options-opacity-bars-hint"),
+            &field!(bar_opacity),
+            0.0..=1.0,
+            "",
+        );
+        cx.slider(
+            tr!("ui-options-opacity-console"),
+            tr!("ui-options-opacity-console-hint"),
+            &field!(console_opacity),
+            0.0..=1.0,
+            "",
+        );
+        cx.slider(
+            tr!("ui-options-opacity-minimap"),
+            tr!("ui-options-opacity-minimap-hint"),
+            &field!(minimap_opacity),
+            0.0..=1.0,
+            "",
+        );
+        // the menus and the pie menu side by side: both are right-click menus
+        cx.slider(
+            tr!("ui-options-opacity-menus"),
+            tr!("ui-options-opacity-menus-hint"),
+            &field!(menu_opacity),
+            0.0..=1.0,
+            "",
+        );
+        cx.toggle(tr!("ui-options-opacity-pie-override"), "", &field!(pie_opacity_override));
+        let off = !cx.s.pie_opacity_override;
+        cx.subs(off, |cx| {
+            cx.slider(tr!("ui-options-opacity-pie"), "", &field!(pie_opacity), 0.0..=1.0, "");
+        });
+        // ChatBubbleOpacity: one setting for the bubbles and the tags
+        cx.slider(
+            tr!("ui-options-chat-bubble-opacity"),
+            "",
+            &field!(chat_bubble_opacity),
+            0.0..=1.0,
+            "",
+        );
+        cx.greyed(false);
+    });
 }

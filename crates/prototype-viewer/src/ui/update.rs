@@ -536,6 +536,7 @@ fn failure_text(kind: prototype_updater::Failure) -> &'static str {
         // macOS: an application to replace, not a folder to extract
         Failure::Unsupported if cfg!(target_os = "macos") => prototype_i18n::tr!("update-error-unsupported-macos"),
         Failure::Unsupported => prototype_i18n::tr!("update-error-unsupported"),
+        Failure::DriveRoot => prototype_i18n::tr!("update-error-drive-root"),
         Failure::Startup => prototype_i18n::tr!("update-error-startup"),
     }
 }

@@ -8,6 +8,8 @@ pub mod backup;
 pub(crate) mod cx;
 mod finish;
 mod pages;
+/// Prototype's own marked in its gradient, outside Preferences too.
+pub(crate) use pages::prototype::prototype_word;
 mod saved_graphics;
 mod scale;
 
@@ -50,6 +52,7 @@ pub enum Page {
     #[default]
     Graphics,
     Camera,
+    Vr,
     Avatars,
     Build,
     Chat,
@@ -64,6 +67,7 @@ pub enum Page {
     Confirmations,
     Inventory,
     Controls,
+    Gamepad,
     Shortcuts,
     Commands,
     System,
@@ -72,10 +76,11 @@ pub enum Page {
 }
 
 impl Page {
-    pub const ALL: [Page; 22] = [
+    pub const ALL: [Page; 24] = [
         Page::Prototype,
         Page::Graphics,
         Page::Camera,
+        Page::Vr,
         Page::Avatars,
         Page::Build,
         Page::Chat,
@@ -90,6 +95,7 @@ impl Page {
         Page::Confirmations,
         Page::Inventory,
         Page::Controls,
+        Page::Gamepad,
         Page::Shortcuts,
         Page::Commands,
         Page::System,
@@ -103,6 +109,7 @@ impl Page {
             Page::Prototype => "prototype",
             Page::Graphics => "graphics",
             Page::Camera => "camera",
+            Page::Vr => "vr",
             Page::Avatars => "avatars",
             Page::Build => "build",
             Page::Chat => "chat",
@@ -117,6 +124,7 @@ impl Page {
             Page::Confirmations => "confirmations",
             Page::Inventory => "inventory",
             Page::Controls => "controls",
+            Page::Gamepad => "gamepad",
             Page::Shortcuts => "shortcuts",
             Page::Commands => "commands",
             Page::System => "system",
@@ -130,6 +138,7 @@ impl Page {
             Page::Prototype => prototype_i18n::tr!("ui-options-prototype"),
             Page::Graphics => prototype_i18n::tr!("ui-options-graphics"),
             Page::Camera => prototype_i18n::tr!("common-camera"),
+            Page::Vr => prototype_i18n::tr!("vr-preferences-title"),
             Page::Avatars => prototype_i18n::tr!("ui-options-avatars"),
             Page::Build => prototype_i18n::tr!("common-build"),
             Page::Chat => prototype_i18n::tr!("common-chat"),
@@ -144,6 +153,7 @@ impl Page {
             Page::Confirmations => prototype_i18n::tr!("ui-options-page-confirmations"),
             Page::Inventory => prototype_i18n::tr!("common-inventory"),
             Page::Controls => prototype_i18n::tr!("ui-options-page-controls"),
+            Page::Gamepad => prototype_i18n::tr!("joystick-gamepad"),
             Page::Shortcuts => prototype_i18n::tr!("ui-options-shortcuts"),
             Page::Commands => prototype_i18n::tr!("ui-options-commands"),
             Page::System => prototype_i18n::tr!("ui-options-page-system"),
@@ -158,6 +168,7 @@ impl Page {
             Page::Prototype => prototype_i18n::tr!("ui-options-prototype-intro"),
             Page::Graphics => prototype_i18n::tr!("ui-options-about-graphics"),
             Page::Camera => prototype_i18n::tr!("ui-options-about-camera"),
+            Page::Vr => prototype_i18n::tr!("vr-preferences-about"),
             Page::Avatars => prototype_i18n::tr!("ui-options-about-avatars"),
             Page::Build => prototype_i18n::tr!("ui-options-about-build"),
             Page::Chat => prototype_i18n::tr!("ui-options-about-chat"),
@@ -172,6 +183,7 @@ impl Page {
             Page::Confirmations => prototype_i18n::tr!("ui-options-about-confirmations"),
             Page::Inventory => prototype_i18n::tr!("ui-options-about-inventory"),
             Page::Controls => prototype_i18n::tr!("ui-options-about-controls"),
+            Page::Gamepad => prototype_i18n::tr!("ui-options-about-gamepad"),
             Page::Shortcuts => prototype_i18n::tr!("ui-options-click-a-shortcut-then-press-the-desired-key-or"),
             Page::Commands => prototype_i18n::tr!("ui-options-about-commands"),
             Page::System => prototype_i18n::tr!("ui-options-about-system"),
@@ -185,6 +197,7 @@ impl Page {
             Page::Prototype => "sparkles-filled",
             Page::Graphics => "device-desktop-filled",
             Page::Camera => "camera-filled",
+            Page::Vr => "device-vision-pro-filled",
             Page::Avatars => "user-filled",
             // the build tools' icon (Command_Build_Icon)
             Page::Build => "box",
@@ -200,6 +213,7 @@ impl Page {
             Page::Confirmations => "circle-check-filled",
             Page::Inventory => "box",
             Page::Controls => "mouse-filled",
+            Page::Gamepad => "device-gamepad-filled",
             Page::Shortcuts => "keyboard-filled",
             Page::Commands => "square-rounded-chevron-right-filled",
             Page::System => "world-filled",
@@ -293,6 +307,7 @@ pub fn demo(st: &mut OptionsUi, value: &str) {
         "auto-accept" => row(Page::Inventory, 0, tr!("received-auto-accept")),
         "animations" | "animations-sync" => row(Page::Prototype, 2, tr!("ui-options-prototype-animation-clock")),
         "remove-prototype" => row(Page::System, 0, tr!("ui-options-remove-prototype")),
+        "alerts" => row(Page::Confirmations, 0, tr!("ui-options-driver-warning")),
         _ => None,
     };
     let audio = match what {
@@ -374,6 +389,7 @@ pub struct OptionsUi {
     /// RLVa `@sendim`: the Do Not Disturb response is an IM, its field greyed.
     pub rlva_sendim_locked: bool,
     pub joystick: crate::joystick::Snapshot,
+    pub vr_default_resolution: Option<[u32; 2]>,
     pub flycam_active: bool,
     pub anti_spam_blocks: Vec<(crate::world::anti_spam::Queue, uuid::Uuid, String)>,
     pub anti_spam_version: u64,
@@ -498,6 +514,9 @@ pub struct OptionsUi {
     pub chat_log_status: String,
     /// The transcripts are in a folder the user chose (set by the app).
     pub chat_log_custom: bool,
+    /// The transcripts are in the Legacy layout, shared with the Legacy
+    /// Viewer: no import nor erasing (set by the app).
+    pub chat_log_shared: bool,
     /// "Erase this account's history?" confirmation open.
     confirm_erase_logs: bool,
     /// "Reset …?" confirmation open, then the reset it said yes to, done by
@@ -747,7 +766,8 @@ fn media_pack_error(failure: prototype_updater::Failure) -> &'static str {
         Failure::Network | Failure::Busy | Failure::Startup => prototype_i18n::tr!("media-plugins-error-network"),
         Failure::Integrity | Failure::Package => prototype_i18n::tr!("media-plugins-error-integrity"),
         Failure::Filesystem => prototype_i18n::tr!("media-plugins-error-filesystem"),
-        Failure::Unsupported => prototype_i18n::tr!("media-plugins-error-unsupported"),
+        // the media pack goes to the data folder: never a drive root's
+        Failure::Unsupported | Failure::DriveRoot => prototype_i18n::tr!("media-plugins-error-unsupported"),
     }
 }
 

@@ -66,9 +66,9 @@ pub use workspace::{
     navigation_beside, navigation_wrapped, paint_glyph, section_header, sort_caret, stat, surface,
 };
 pub(crate) use workspace::{
-    finish_bar_glass, inventory_item_label, inventory_item_label_tagged, inventory_spacing, island_shape, organization_drag_preview,
-    organization_drop_target, organization_header, organization_section, organization_source, organization_typography, overlay,
-    overlay_frame, paint_world_label,
+    finish_bar_glass, inventory_item_label, inventory_item_label_tagged, inventory_spacing, island, island_shape,
+    organization_drag_preview, organization_drop_target, organization_header, organization_section, organization_source,
+    organization_typography, overlay, overlay_frame, paint_world_label,
 };
 
 /// Whether UI owns a world-pointer event at `pos` (logical points). Resize
@@ -583,16 +583,20 @@ impl<'a> Floater<'a> {
             // Dragon Viewer: the chat and Preferences keep a dense glass, the text clear
             glass.panel_alpha = glass.panel_alpha.saturating_sub(8);
         }
+        let opacity = super::surface_opacity::window(ctx, self.id, self.chat);
+        let shadow = ctx.global_style().visuals.window_shadow;
         let frame = egui::Frame::new()
-            .fill(Color32::from_rgba_unmultiplied(
-                p.panel.r(),
-                p.panel.g(),
-                p.panel.b(),
-                glass.panel_alpha,
+            .fill(super::surface_opacity::frame_fill(
+                p,
+                Color32::from_rgba_unmultiplied(p.panel.r(), p.panel.g(), p.panel.b(), glass.panel_alpha),
+                opacity,
             ))
             .stroke(border_stroke(p, Stroke::new(1.3, p.amber.gamma_multiply(0.78))))
             .corner_radius(ctx.global_style().visuals.window_corner_radius)
-            .shadow(ctx.global_style().visuals.window_shadow)
+            .shadow(egui::Shadow {
+                color: shadow.color.gamma_multiply(opacity),
+                ..shadow
+            })
             .inner_margin(if self.framed_header.is_some() {
                 egui::Margin::ZERO
             } else if self.flush_body {
@@ -1076,13 +1080,15 @@ impl<'a> Floater<'a> {
             }
             if let Some((painter, slot)) = glass_slot {
                 let radius = f32::from(ctx.global_style().visuals.window_corner_radius.nw);
+                super::surface_opacity::fade_after(ctx, painter.layer_id(), slot, p, opacity);
                 if self.scene_blur {
-                    workspace::finish_glass(
+                    workspace::finish_glass_faded(
                         &painter.with_clip_rect(response.response.rect),
                         slot,
                         response.response.rect,
                         &glass,
                         radius,
+                        opacity,
                     );
                 }
                 if self.id == super::options::WINDOW {
@@ -2546,7 +2552,7 @@ pub fn switch_labeled_wrapped(ui: &mut egui::Ui, p: &Palette, on: &mut bool, lab
 }
 
 /// Custom-painted controls follow an explicit font override in their UI scope.
-fn control_font(ui: &egui::Ui, default_size: f32) -> egui::FontId {
+pub(crate) fn control_font(ui: &egui::Ui, default_size: f32) -> egui::FontId {
     ui.style()
         .override_font_id
         .clone()

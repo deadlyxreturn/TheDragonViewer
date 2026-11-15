@@ -8,6 +8,7 @@ use super::super::cx::{Cx, F, field};
 use crate::build::MoveHologram;
 use crate::settings::{ChatStyle, DestinationsStyle, NotificationsStyle, PhotoWindowStyle, Settings, WorldMapStyle};
 use crate::theme::Palette;
+use crate::world::beams::Style as BeamStyle;
 use crate::world::lookat::{Aim, Style};
 use egui::epaint::{Mesh, Vertex, WHITE_UV};
 use egui::{Color32, FontId, Pos2, Rect, Sense, Shape, Vec2};
@@ -29,6 +30,7 @@ pub fn set_all(s: &mut Settings, look: Look) {
     s.chat_style = if prototype { ChatStyle::Prototype } else { ChatStyle::Legacy };
     s.classic_name_tags = !prototype;
     s.lookat.style = if prototype { Style::Prototype } else { Style::Legacy };
+    s.beams.style = if prototype { BeamStyle::Prototype } else { BeamStyle::Legacy };
     if !prototype {
         s.lookat.aim = Aim::Direction;
     }
@@ -73,7 +75,7 @@ pub fn set_all(s: &mut Settings, look: Look) {
 
 /// The prototype gradient at `t` (0 at its start, 1 at its end): the brand's
 /// green, turquoise, indigo, violet and rose, taken from the palette.
-fn prototype_color(p: &Palette, t: f32) -> Color32 {
+pub(crate) fn prototype_color(p: &Palette, t: f32) -> Color32 {
     let stops = [p.success, p.teal, p.indigo_light, p.violet_light, p.rose];
     let x = t.clamp(0.0, 1.0) * (stops.len() - 1) as f32;
     let i = (x.floor() as usize).min(stops.len() - 2);
@@ -101,6 +103,36 @@ fn prototype_strip(p: &Palette, r: Rect) -> Shape {
         }
     }
     Shape::mesh(m)
+}
+
+/// `text` in the prototype gradient, one letter after the other: the mark of
+/// what is Prototype's own (this page's entry, the Prototype Weather titles).
+pub(crate) fn prototype_text(p: &Palette, text: &str, font: FontId) -> egui::text::LayoutJob {
+    let count = text.chars().count().max(2) as f32 - 1.0;
+    let mut job = egui::text::LayoutJob::default();
+    for (i, ch) in text.chars().enumerate() {
+        let color = prototype_color(p, i as f32 / count);
+        job.append(&ch.to_string(), 0.0, egui::TextFormat::simple(font.clone(), color));
+    }
+    job
+}
+
+/// `text` with only the word "Prototype" in the prototype gradient, the rest in
+/// `ink`: an Prototype feature's title outside Preferences (Prototype Weather),
+/// whatever the word order of the language.
+pub(crate) fn prototype_word(p: &Palette, text: &str, font: FontId, ink: Color32) -> egui::text::LayoutJob {
+    let mut job = egui::text::LayoutJob::default();
+    let mut rest = text;
+    while let Some(at) = rest.find("Prototype") {
+        job.append(&rest[..at], 0.0, egui::TextFormat::simple(font.clone(), ink));
+        for (i, ch) in "Prototype".chars().enumerate() {
+            let color = prototype_color(p, i as f32 / 5.0);
+            job.append(&ch.to_string(), 0.0, egui::TextFormat::simple(font.clone(), color));
+        }
+        rest = &rest[at + "Prototype".len()..];
+    }
+    job.append(rest, 0.0, egui::TextFormat::simple(font, ink));
+    job
 }
 
 /// A choice between Prototype's look (first, in the accent) and the Legacy
@@ -346,6 +378,15 @@ pub fn page(cx: &mut Cx, tab: usize) {
                     &[
                         (Style::Prototype, tr!("ui-options-prototype-halo"), true),
                         (Style::Legacy, tr!("ui-options-prototype-crosshair"), false),
+                    ],
+                );
+                cx.wide().choice(
+                    tr!("ui-options-prototype-beams"),
+                    tr!("ui-options-prototype-beams-help"),
+                    &field!(beams.style),
+                    &[
+                        (BeamStyle::Prototype, tr!("ui-options-prototype-beams-thread"), true),
+                        (BeamStyle::Legacy, tr!("ui-options-prototype-beams-particles"), false),
                     ],
                 );
                 look(
